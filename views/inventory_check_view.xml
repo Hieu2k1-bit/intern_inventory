@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="action_inventory_check" model="ir.actions.act_window">
+            <field name="name">Phiếu kiểm kê</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">inventory.check</field>
+            <field name="view_mode">tree,form</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Create a new Inventory Check for more!
+                </p>
+            </field>
+        </record>
+
+        <menuitem id="inventory_menu"
+                  name="Phiếu kiểm kê"
+                  parent="stock.menu_stock_warehouse_mgmt"
+                  action="action_inventory_check"
+                  sequence="1"/>
+
+        <record id="inventory_check_list_view" model="ir.ui.view">
+            <field name="name">Inventory Check List</field>
+            <field name="model">inventory.check</field>
+            <field name="arch" type="xml">
+                <tree string="Danh sách phiếu kiểm kê">
+                    <field name="name" optional="show"/>
+                    <field name="display_warehouse_name" optional="show"/>
+                    <field name="display_warehouse_location" optional="show"/>
+                    <field name="employeeCheck" optional="show"/>
+                    <field name="company" optional="show"/>
+                    <field name="state" optional="show"/>
+                    <field name="create_datetime" optional="show"/>
+                    <field name="check_date" optional="show"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="inventory_check_form_view" model="ir.ui.view">
+            <field name="name">Inventory Check Form</field>
+            <field name="model">inventory.check</field>
+            <field name="arch" type="xml">
+                <form>
+                    <header>
+                        <button name="action_complete" string="Hoan tat" type="object" class="oe_highlight"/>
+                        <field name="state" widget="statusbar" statusbar_visible="ready, done"/>
+                        <button name="action_apply_all" string="Ap dung cho tat ca" type="object" class="oe_highlight"/>
+                    </header>
+
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="name" attrs="{'readonly': [('state', '=', 'done')]}"/>
+                                <field name="warehouse_id" attrs="{'readonly': [('state', '=', 'done')]}"/>
+                                <field name="location_id" attrs="{'readonly': [('state', '=', 'done')]}"/>
+                            </group>
+                            <group>
+                                <field name="create_datetime" attrs="{'readonly': [('state', '=', 'done')]}"/>
+                                <field name="check_date" attrs="{'readonly': [('state', '=', 'done')]}"/>
+                                <field name="employeeCheck" attrs="{'readonly': [('state', '=', 'done')]}"/>
+                                <field name="company" attrs="{'readonly': [('state', '=', 'done')]}"/>
+                            </group>
+                        </group>
+                        <button name="action_open_product_selection" type="object" string="Add Products" class="btn-primary"/>
+                        <notebook>
+                            <page string="Product Information">
+                                <field name="line_ids">
+                                    <tree editable="bottom">
+                                        <field name="product_id"/>
+                                        <field name="lot_id"/>
+                                        <field name="unit_id"/>
+                                        <field name="quantity"/>
+                                        <field name="inventory_quantity"/>
+                                        <field name="diff_quantity" readonly="1"/>
+                                            <button name="action_history" string="History" type="object" class="fa fa-history"
+                                                    attrs="{'invisible': [('id', '=', False)]}"/>
+                                            <button name="action_apply" string="Apply" type="object" class="fa fa-floppy-o"
+                                                    attrs="{'invisible': [('id', '=', False)]}"/>
+                                            <button name="action_delete" string="Delete" type="object" class="fa fa-times"
+                                                    attrs="{'invisible': [('id', '=', False)]}"/>
+                                    </tree>
+                                </field>
+                            </page>
+                        </notebook>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+    </data>
+</odoo>
