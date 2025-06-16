@@ -12,13 +12,14 @@ try:
 except ImportError:
     openpyxl = None
 
+
 class InventoryCheck(models.Model):
     _name = 'inventory.check'
-    _description = 'Phiếu kiểm kê kho'
+    _description = 'Inventory Check'
 
     name = fields.Text(string='Check Name')
     warehouse_id = fields.Many2one('stock.warehouse', string='Warehouse ID')
-    location_id =  fields.Many2one('stock.location', string='Warehouse Location ID')
+    location_id = fields.Many2one('stock.location', string='Warehouse Location ID')
     employeeCheck_id = fields.Many2one('res.users', string='Employee Check')
     company = fields.Many2one('res.company', string='Company')
     state = fields.Selection([('ready', 'Ready'), ('done', 'Done')], default='ready', string='State')
@@ -26,8 +27,9 @@ class InventoryCheck(models.Model):
     check_date = fields.Date(string='Check Date', required=True, default=lambda self: fields.Date.today())
     line_ids = fields.One2many('inventory.line', 'check_id', string='Product Check Lines')
 
-    display_warehouse_name = fields.Char(string ='Warehouse', compute='_compute_display_warehouse_name', store=True)
-    display_warehouse_location = fields.Char(string='Warehouse Location', compute='_compute_display_warehouse_location', store=True)
+    display_warehouse_name = fields.Char(string='Warehouse', compute='_compute_display_warehouse_name', store=True)
+    display_warehouse_location = fields.Char(string='Warehouse Location', compute='_compute_display_warehouse_location',
+                                             store=True)
 
     # @api.depends('warehouse_id')
     def _compute_display_warehouse_name(self):
@@ -45,17 +47,10 @@ class InventoryCheck(models.Model):
             else:
                 rec.display_warehouse_location = "All Location"
 
-    # def _compute_display_employeeCheck(self):
-    #     for rec in self:
-    #         if rec.employeeCheck_id:
-    #             rec.display_arehouswe_location = rec.location_id.name
-    #         else:
-    #             rec.display_warehouse_location = "All Location"
-
     def action_complete(self):
-        self.ensure_one()   # Dam bao chi xu ly mot form mot luc
+        self.ensure_one()  # Dam bao chi xu ly mot form mot luc
         self.write({'state': 'done',
-                    'create_datetime': fields.Datetime.now()})   # Tu dong luu cac thay doi
+                    'create_datetime': fields.Datetime.now()})  # Tu dong luu cac thay doi
         return True
         # self.env.ref('intern_inventory.action_inventory_check').read())[0] # Luu form va thoat ra man hinh view
 
@@ -87,15 +82,16 @@ class InventoryCheck(models.Model):
             if 'Phiếu kiểm kê' not in workbook.sheetnames:
                 return {
                     'status': 'error',
-                    'message': _("Sheet 'Phiếu kiểm kê' không tìm thấy trong file Excel")
+                    'message': _("Sheet 'Phiếu kiểm kê' not found in Excel file")
                 }
             project_sheet = workbook['Phiếu kiểm kê']
             # Extract headers and rows for 'Phiếu kiểm kê' sheet
             project_header = [
                 cell.value.strip() if isinstance(cell.value, str) else cell.value
-                for cell in next(project_sheet.iter_rows(min_row=1, max_row=1))
-            ]  # lấy giá trị dòng đầu của cel (header)
-            project_rows = list(project_sheet.iter_rows(min_row=2, values_only=True))  # lấy giá trị trong ô thay vì cel
+                for cell in
+                next(project_sheet.iter_rows(min_row=1, max_row=1))]  # the first row value of the cel (header)
+
+            project_rows = list(project_sheet.iter_rows(min_row=2, values_only=True))
             print('project_header', project_header)
             print('Number of project rows', project_rows)
 
@@ -105,7 +101,7 @@ class InventoryCheck(models.Model):
                 if field not in project_header:
                     return {
                         'status': 'error',
-                        'message': _(f"Thiếu cột bắt buộc: '{field}' trong sheet'Phiếu kiểm kê'")
+                        'message': _(f"Missing required column: '{field}' in sheet 'Phiếu kiểm kê'")
                     }
             # Header mapping for 'Phiếu kiểm kê' sheet
             project_header_mapping = {
@@ -114,7 +110,7 @@ class InventoryCheck(models.Model):
                 'Người kiểm kê': 'employeeCheck_id',
                 'Kho': 'warehouse_id',
                 'Vị trí': 'location_id',
-                'Sản phẩm': 'product.id',
+                'Sản phẩm': 'product_id',
                 'Số lô/serial': 'lot_id',
                 'ĐVT': 'unit_id',
                 'Số lượng hiện có': 'quantity',
@@ -130,7 +126,7 @@ class InventoryCheck(models.Model):
                 else:
                     return {
                         'status': 'error',
-                        'message': f"Thiếu 'Phiếu kiểm kê' trong dòng dữ liệu của sheet 'Phiếu kiểm kê': {row_data}"
+                        'message': f"Missing 'Phiếu kiểm kê' in the data row of 'Phiếu kiểm kê' sheet: {row_data}"
                     }
             projects = {}
             for row in project_rows:
@@ -144,13 +140,13 @@ class InventoryCheck(models.Model):
                 projects[project_data['name']] = project
             return {
                 'status': 'success',
-                'message': 'Nhập dữ liệu thành công!'
+                'message': 'Data import successful!'
             }
         except Exception as e:
             self.env.cr.rollback()
             return {
                 "status": "error",
-                "message": f"Lỗi khi nhập dữ liệu: {str(e)}"
+                "message": f"Error while entering data: {str(e)}"
             }
 
     def _prepare_project_data(self, row_data, mapping):
@@ -159,29 +155,38 @@ class InventoryCheck(models.Model):
             value = row_data.get(excel_col)
             if not value:
                 continue
-            if field_name in ['user_id', 'warehouse_id', 'location_id', 'uom_id', 'lot_id', 'product.id']:
+            if field_name in ['employeeCheck_id', 'warehouse_id', 'location_id', 'unit_id', 'lot_id', 'product_id']:
                 model = {
                     'employeeCheck_id': 'res.users',
                     'warehouse_id': 'stock.warehouse',
                     'location_id': 'stock.location',
                     'unit_id': 'uom.uom',
                     'lot_id': 'stock.lot',
-                    'product.id': 'product.product',
+                    'product_id': 'product.product',
                 }[field_name]
-                record = self.env[model].search([('name', '=', value)], limit=1)
+
+                # === SỬA ĐIỂM NÀY ĐỂ TÌM KIẾM THEO DEFAULT_CODE CHO PRODUCT ===
+                if model == 'product.product':
+                    # Tìm kiếm sản phẩm bằng trường 'default_code'
+                    record = self.env[model].search([('default_code', '=', value)], limit=1)
+                else:
+                    # Các model khác (user, warehouse, location, uom, lot) vẫn tìm kiếm bằng 'name'
+                    record = self.env[model].search([('name', '=', value)], limit=1)
+                # =============================================================
+
                 if not record:
                     return {
                         'status': 'error',
-                        'message': f"Không tìm thấy '{value}' trong '{excel_col}' (model {model})"
+                        'message': f"Not found '{value}' in '{excel_col}' (model {model})"
                     }
-                result[field_name if field_name != 'product.id' else 'product_id'] = record.id
+                result[field_name if field_name != 'product_id' else 'product_id'] = record.id
             else:
                 result[field_name] = value
-        result['name'] = str(row_data.get('Phiếu kiểm kê')).strip()  # dùng làm mã kiểm kê duy nhất
+        result['name'] = str(row_data.get('Phiếu kiểm kê')).strip()  # used as unique inventory code
         return result
 
     def _update_or_create_project(self, vals):
-        # Kiểm tra nếu đã có thì cập nhật, nếu chưa thì tạo mới
+        # Check if it exists then update, if not then create a new one
         existing = self.search([('name', '=', vals.get('name'))], limit=1)
         if existing:
             existing.write(vals)
