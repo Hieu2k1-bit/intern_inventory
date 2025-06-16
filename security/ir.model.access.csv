@@ -2,4 +2,5 @@ id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_inventory_check,inventory.check,model_inventory_check,,1,1,1,1
 access_inventory_line,inventory.line,model_inventory_line,,1,1,1,1
 access_inventory_wizard_product,product.selection.wizard,model_product_selection_wizard,,1,1,1,1
+access_project_wizard_import_user,project.wizard.import,model_project_wizard_import,,1,1,1,1
 

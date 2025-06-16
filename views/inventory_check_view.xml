@@ -27,7 +27,7 @@
                     <field name="name" optional="show"/>
                     <field name="display_warehouse_name" optional="show"/>
                     <field name="display_warehouse_location" optional="show"/>
-                    <field name="employeeCheck" optional="show"/>
+                    <field name="employeeCheck_id" optional="show"/>
                     <field name="company" optional="show"/>
                     <field name="state" optional="show"/>
                     <field name="create_datetime" optional="show"/>
@@ -45,6 +45,8 @@
                         <button name="action_complete" string="Hoan tat" type="object" class="oe_highlight"/>
                         <field name="state" widget="statusbar" statusbar_visible="ready, done"/>
                         <button name="action_apply_all" string="Ap dung cho tat ca" type="object" class="oe_highlight"/>
+                        <button name="%(project_wizard_import_action)d" type="action" string="Import data"
+                            class="btn-primary"/>
                     </header>
 
                     <sheet>
@@ -57,7 +59,7 @@
                             <group>
                                 <field name="create_datetime" attrs="{'readonly': [('state', '=', 'done')]}"/>
                                 <field name="check_date" attrs="{'readonly': [('state', '=', 'done')]}"/>
-                                <field name="employeeCheck" attrs="{'readonly': [('state', '=', 'done')]}"/>
+                                <field name="employeeCheck_id" attrs="{'readonly': [('state', '=', 'done')]}"/>
                                 <field name="company" attrs="{'readonly': [('state', '=', 'done')]}"/>
                             </group>
                         </group>

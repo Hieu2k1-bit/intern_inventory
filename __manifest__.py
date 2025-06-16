@@ -12,6 +12,7 @@
         'base', 'stock', 'web',
     ],
     'data': [
+        "wizard/wizard_import_kiemke_view.xml",
         "views/inventory_check_view.xml",
         "security/ir.model.access.csv",
         "wizard/wizard_product_view.xml",
