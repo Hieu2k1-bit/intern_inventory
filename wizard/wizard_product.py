@@ -2,9 +2,9 @@ from odoo import models, fields, api
 
 class ProductSelectionWizard(models.TransientModel):
     _name = 'product.selection.wizard'
-    _description = 'Wizard Chọn sản phẩm kiểm kê'
+    _description = 'Wizard choose products'
 
-    check_id = fields.Many2one('inventory.check', string="Inventory Check")
+    check_id = fields.Many2one('inventory.check', string="Inventory check")
     line_ids = fields.Many2many('product.product', string="Product")
 
 

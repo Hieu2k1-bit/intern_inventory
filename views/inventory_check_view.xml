@@ -2,7 +2,7 @@
 <odoo>
     <data>
         <record id="action_inventory_check" model="ir.actions.act_window">
-            <field name="name">Phiếu kiểm kê</field>
+            <field name="name">Inventory check</field>
             <field name="type">ir.actions.act_window</field>
             <field name="res_model">inventory.check</field>
             <field name="view_mode">tree,form</field>
@@ -14,16 +14,16 @@
         </record>
 
         <menuitem id="inventory_menu"
-                  name="Phiếu kiểm kê"
+                  name="Inventory check"
                   parent="stock.menu_stock_warehouse_mgmt"
                   action="action_inventory_check"
                   sequence="1"/>
 
         <record id="inventory_check_list_view" model="ir.ui.view">
-            <field name="name">Inventory Check List</field>
+            <field name="name">Inventory check list</field>
             <field name="model">inventory.check</field>
             <field name="arch" type="xml">
-                <tree string="Danh sách phiếu kiểm kê">
+                <tree string="Inventory check ">
                     <field name="name" optional="show"/>
                     <field name="display_warehouse_name" optional="show"/>
                     <field name="display_warehouse_location" optional="show"/>
@@ -37,14 +37,14 @@
         </record>
 
         <record id="inventory_check_form_view" model="ir.ui.view">
-            <field name="name">Inventory Check Form</field>
+            <field name="name">Inventory check form</field>
             <field name="model">inventory.check</field>
             <field name="arch" type="xml">
                 <form>
                     <header>
-                        <button name="action_complete" string="Hoan tat" type="object" class="oe_highlight"/>
+                        <button name="action_complete" string="Completed" type="object" class="oe_highlight"/>
                         <field name="state" widget="statusbar" statusbar_visible="ready, done"/>
-                        <button name="action_apply_all" string="Ap dung cho tat ca" type="object" class="oe_highlight"/>
+                        <button name="action_apply_all" string="Apply all" type="object" class="oe_highlight"/>
                         <button name="%(project_wizard_import_action)d" type="action" string="Import data"
                             class="btn-primary"/>
                     </header>
@@ -63,9 +63,9 @@
                                 <field name="company" attrs="{'readonly': [('state', '=', 'done')]}"/>
                             </group>
                         </group>
-                        <button name="action_open_product_selection" type="object" string="Add Products" class="btn-primary"/>
+                        <button name="action_open_product_selection" type="object" string="Add products" class="btn-primary"/>
                         <notebook>
-                            <page string="Product Information">
+                            <page string="Product information">
                                 <field name="line_ids">
                                     <tree editable="bottom">
                                         <field name="product_id"/>

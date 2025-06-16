@@ -26,7 +26,7 @@ class ProjectWizardImport(models.TransientModel):
                 'tag': 'display_notification',
                 'params':{
                     'title': _('Success'),
-                    'message': _('Successfully imported file'),
+                    'message': _('Successfully imported file!'),
                     'type': 'success',
                     'sticky': False,
                     'next': {
@@ -40,7 +40,7 @@ class ProjectWizardImport(models.TransientModel):
                 'type': 'ir.actions.client',
                 'tag': 'display_notification',
                 'params': {
-                    'title': _('Lỗi'),
+                    'title': _('Errorx`'),
                     'message': result['message'],
                     'type': 'danger',
                     'sticky': True,
