@@ -5,6 +5,7 @@ from io import BytesIO
 from odoo import models, fields, api, _
 from openpyxl.reader.excel import load_workbook
 from reportlab.graphics.shapes import translate
+import xlsxwriter
 
 try:
     import openpyxl
@@ -56,7 +57,7 @@ class InternInventory(models.Model):
         'check_id',
         string='Visible Product Lines',
         compute='_compute_line_ids_visible',
-        store=False  # Không lưu, chỉ hiển thị
+        store=False
     )
 
     @api.depends('warehouse_id', 'line_ids.product_id', 'location_id')
@@ -398,3 +399,123 @@ class InternInventory(models.Model):
         result['name'] = str(
             inventory_check_name).strip() if inventory_check_name is not None else ''  # dùng làm mã kiểm kê duy nhất
         return result
+
+    def action_open_product_selection(self):
+        self.ensure_one()
+
+        # Nếu không có kho hoặc vị trí cụ thể nào được chọn, thêm trực tiếp tất cả sản phẩm có tồn kho
+        if not self.warehouse_id and not self.location_id:
+            all_quants = self.env['stock.quant'].search([])
+            existing_product_location_ids = self.line_ids.read_group(
+                [('check_id', '=', self.id)],
+                ['product_id', 'location_id'],
+                ['product_id', 'location_id']
+            )
+            existing_product_location_set = {
+                (item['product_id'][0], item['location_id'][0]) for item in existing_product_location_ids
+            }
+
+            products_to_add = []
+            for quant in all_quants:
+                product_location_key = (quant.product_id.id, quant.location_id.id)
+                if product_location_key not in existing_product_location_set:
+                    products_to_add.append({
+                        'check_id': self.id,
+                        'product_id': quant.product_id.id,
+                        'location_id': quant.location_id.id,
+                        'lot_id': quant.lot_id.id if quant.lot_id else False,
+                        'uom_id': quant.product_id.uom_id.id,
+                        'quantity': quant.quantity,
+                        'quantity_counted': 0.0,
+                    })
+                    existing_product_location_set.add(product_location_key)
+
+            if products_to_add:
+                self.env['intern_inventory.line'].create(products_to_add)
+
+            # Tải lại chế độ xem biểu mẫu hiện tại để hiển thị các dòng mới được thêm
+            return {
+                'type': 'ir.actions.act_window',
+                'res_model': 'intern_inventory.check',
+                'view_mode': 'form',
+                'res_id': self.id,
+                'target': 'current',
+            }
+
+        # Ngược lại, mở trình hướng dẫn để lựa chọn
+        return {
+            'name': 'Chọn Sản phẩm',
+            'type': 'ir.actions.act_window',
+            'res_model': 'product.selection.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {
+                'default_check_id': self.id,
+            }
+        }
+
+    def action_export_excel(self):
+        for rec in self:
+            output = BytesIO()
+            workbook = xlsxwriter.Workbook(output, {'in_memory': True})
+            sheet = workbook.add_worksheet('Kiểm kê kho')
+
+            sheet.set_column(0, 0, 20)
+            sheet.set_column(1, 1, 15)
+            sheet.set_column(2, 2, 20)
+            sheet.set_column(3, 3, 15)
+            sheet.set_column(4, 4, 20)
+            sheet.set_column(5, 5, 25)
+            sheet.set_column(6, 6, 20)
+            sheet.set_column(7, 7, 10)
+            sheet.set_column(8, 8, 15)
+            sheet.set_column(9, 9, 15)
+
+            header_format = workbook.add_format({
+                'bold': True,
+                'font_color': 'red',
+                'align': 'center',
+                'valign': 'vcenter',
+                'bg_color': '#F9F9F9',
+                'border': 1
+            })
+
+            headers = [
+                'Phiếu kiểm kê', 'Ngày kiểm kê', 'Người kiểm kê',
+                'Kho', 'Vị trí', 'Sản phẩm', 'Số lô/serial',
+                'ĐVT', 'Số lượng hiện có', 'Số lượng đã đếm'
+            ]
+            for col_num, header in enumerate(headers):
+                sheet.write(0, col_num, header, header_format)
+
+            row = 1
+            for line in rec.line_ids:
+                sheet.write(row, 0, rec.name or '')
+                sheet.write(row, 1, str(rec.inventory_date or ''))
+                sheet.write(row, 2, rec.user_id.name or '')
+                sheet.write(row, 3, rec.warehouse_id.name if rec.warehouse_id else 'Tất cả kho')
+                sheet.write(row, 4, line.location_id.display_name or line.location_id.complete_name or '')
+                sheet.write(row, 5, line.product_id.name or '')
+                sheet.write(row, 6, line.lot_id.name if line.lot_id else '')
+                sheet.write(row, 7, line.uom_id.name if line.uom_id else '')
+                sheet.write(row, 8, line.quantity or 0)
+                sheet.write(row, 9, line.quantity_counted or 0)
+                row += 1
+
+            workbook.close()
+            output.seek(0)
+            data = output.read()
+
+            export_attachment = self.env['ir.attachment'].create({
+                'name': f'PhieuKiemKe_{rec.name}.xlsx',
+                'type': 'binary',
+                'datas': base64.b64encode(data),
+                'res_model': 'intern_inventory.check',
+                'res_id': rec.id,
+            })
+
+            return {
+                'type': 'ir.actions.act_url',
+                'url': f'/web/content/{export_attachment.id}?download=true',
+                'target': 'self',
+            }

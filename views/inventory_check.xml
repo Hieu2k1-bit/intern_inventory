@@ -10,6 +10,10 @@
                     <button string="Cancel" class="btn-secondary" special="cancel"/>
                     <button name="%(project_wizard_import_action)d" type="action" string="Import data"
                             class="btn-primary"/>
+                    <button name="action_export_excel"
+                                type="object"
+                                string="Export Excel"
+                                class="btn-primary"/>
                 </header>
                 <sheet>
                     <group>
