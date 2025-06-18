@@ -16,23 +16,29 @@ class ProjectWizardImport(models.TransientModel):
         if not self.file:
             raise ValidationError(_("Please upload a file for data import."))
 
-        attachment = self.file[0]
-        file_data = attachment.datas
-        result = self.env['inventory.check'].import_data(file_data)
+        file_data = self.file[0].datas  # Giả sử self.file là binary file field
+
+        # Lấy active_id từ context để xác định phiếu kiểm kê đang thao tác
+        active_id = self.env.context.get('active_id')
+        if not active_id:
+            raise ValidationError(_("Unable to locate inventory sheet for data entry."))
+
+        inventory = self.env['intern_inventory.check'].browse(active_id)
+        if not inventory.exists():
+            raise ValidationError(_("Inventory sheet does not exist."))
+
+        result = inventory.import_data(file_data)
 
         if result['status'] == 'success':
             return {
                 'type': 'ir.actions.client',
                 'tag': 'display_notification',
-                'params':{
+                'params': {
                     'title': _('Success'),
-                    'message': _('Successfully imported file!'),
+                    'message': _('File imported successfully.'),
                     'type': 'success',
                     'sticky': False,
-                    'next': {
-                        'type': 'ir.actions.act_window_close',
-                        'next': {'type': 'ir.actions.client', 'tag': 'reload'}
-                    }
+                    'next': {'type': 'ir.actions.act_window_close'}
                 }
             }
         else:
@@ -40,14 +46,9 @@ class ProjectWizardImport(models.TransientModel):
                 'type': 'ir.actions.client',
                 'tag': 'display_notification',
                 'params': {
-                    'title': _('Errorx`'),
+                    'title': _('Error'),
                     'message': result['message'],
                     'type': 'danger',
-                    'sticky': True,
-                    'next': {
-                        'type': 'ir.actions.act_window_close',
-                    }
+                    'sticky': True
                 }
             }
-
-

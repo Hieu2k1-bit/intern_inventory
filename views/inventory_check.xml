@@ -1,0 +1,77 @@
+<odoo>
+    <record id="view_intern_inventory_check_form" model="ir.ui.view">
+        <field name="name">intern_inventory.check.form</field>
+        <field name="model">intern_inventory.check</field>
+        <field name="arch" type="xml">
+            <form string="Inventory check sheet">
+                <header>
+                    <field name="state" widget="statusbar" statusbar_visible="ready,done"/>
+                    <button name="action_done" type="object" string="DONE" states="ready" class="oe_highlight"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                    <button name="%(project_wizard_import_action)d" type="action" string="Import data"
+                            class="btn-primary"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="warehouse_id"/>
+                            <field name="location_id"/>
+                        </group>
+                        <group>
+                            <field name="create_date"/>
+                            <field name="inventory_date"/>
+                            <field name="user_id"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Product Information">
+                            <field name="line_ids_visible">
+                                <tree editable="bottom" delete="false">
+                                    <field name="warehouse_display_name"/>
+                                    <field name="location_display_name"/>
+                                    <field name="product_id" readonly="1"/>
+                                    <field name="lot_id" readonly="1"/>
+                                    <field name="uom_id" readonly="1"/>
+                                    <field name="quantity" readonly="1"/>
+                                    <field name="quantity_counted"/>
+                                    <field name="diff_quantity" readonly="1"/>
+                                    <button name="action_history" string="History" type="object" class="fa fa-history"
+                                            attrs="{'invisible': [('id', '=', False)]}"/>
+                                    <button name="action_apply" string="Apply" type="object" class="fa fa-floppy-o"
+                                            attrs="{'invisible': [('id', '=', False)]}"/>
+                                    <button name="action_delete" string="Delete" type="object" class="fa fa-times"
+                                            attrs="{'invisible': [('id', '=', False)]}"/>
+                                </tree>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="view_intern_inventory_check_tree" model="ir.ui.view">
+        <field name="name">intern_inventory.check.tree</field>
+        <field name="model">intern_inventory.check</field>
+        <field name="arch" type="xml">
+            <tree string="Inventory check sheet">
+                <field name="name"/>
+                <field name="warehouse_display_name"/>
+                <field name="location_display_name"/>
+                <field name="user_id"/>
+                <field name="company_name"/>
+                <field name="state_display_name"/>
+            </tree>
+        </field>
+    </record>
+    <record id="intern_inventory_check_action" model="ir.actions.act_window">
+        <field name="name">Inventory check sheet</field>
+        <field name="res_model">intern_inventory.check</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+    <menuitem id="menu_intern_inventory_check_action"
+              name="Create inventory check sheet"
+              parent="stock.menu_stock_warehouse_mgmt"
+              action="intern_inventory_check_action"
+              sequence="25"/>
+</odoo>
