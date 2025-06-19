@@ -4,7 +4,7 @@
             <field name="name">project.wizard.import.form</field>
             <field name="model">project.wizard.import</field>
             <field name="arch" type="xml">
-                <form string="Import dữ liệu">
+                <form string="Import data">
                     <group>
                         <field name="file" widget="many2many_binary"/>
                     </group>

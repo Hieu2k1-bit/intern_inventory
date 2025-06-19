@@ -5,22 +5,25 @@
         <field name="arch" type="xml">
             <form string="Inventory check sheet">
                 <header>
-                    <field name="state" widget="statusbar" statusbar_visible="ready,done"/>
-                    <button name="action_done" type="object" string="DONE" states="ready" class="oe_highlight"/>
+                    <button name="action_complete" string="Completed" type="object" class="oe_highlight"/>
+                    <field name="state" widget="statusbar" statusbar_visible="ready, done"/>
+                    <button name="action_apply_all" string="Apply all" type="object" class="oe_highlight"/>
                     <button string="Cancel" class="btn-secondary" special="cancel"/>
+                    <button name="action_export_excel"
+                            type="object"
+                            string="Export Excel"
+                            class="btn-primary"/>
                     <button name="%(project_wizard_import_action)d" type="action" string="Import data"
                             class="btn-primary"/>
-                    <button name="action_export_excel"
-                                type="object"
-                                string="Export Excel"
-                                class="btn-primary"/>
                 </header>
                 <sheet>
+                    <field name="is_imported" invisible="1"/>
                     <group>
                         <group>
-                            <field name="name"/>
-                            <field name="warehouse_id"/>
-                            <field name="location_id"/>
+                            <field name="name" attrs="{'readonly': [('state', '=', 'done')]}"/>
+                            <field name="warehouse_id"
+                                   attrs="{'readonly': [('state', '=', 'done')]}"/>
+                            <field name="location_id" attrs="{'readonly': [('is_imported', '=', True)]}"/>
                         </group>
                         <group>
                             <field name="create_date"/>
@@ -30,8 +33,8 @@
                     </group>
                     <notebook>
                         <page string="Product Information">
-                            <field name="line_ids_visible">
-                                <tree editable="bottom" delete="false">
+                            <field name="line_ids">
+                                <tree editable="bottom">
                                     <field name="warehouse_display_name"/>
                                     <field name="location_display_name"/>
                                     <field name="product_id" readonly="1"/>
