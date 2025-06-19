@@ -31,12 +31,16 @@
                             <field name="user_id"/>
                         </group>
                     </group>
+                    <button name="action_open_product_selection"
+                            type="object"
+                            string="Add product"
+                            class="btn-primary"/>
                     <notebook>
                         <page string="Product Information">
                             <field name="line_ids">
-                                <tree editable="bottom">
-                                    <field name="warehouse_display_name"/>
-                                    <field name="location_display_name"/>
+                                <tree editable="bottom" delete="false">
+                                    <field name="warehouse_id"/>
+                                    <field name="location_id"/>
                                     <field name="product_id" readonly="1"/>
                                     <field name="lot_id" readonly="1"/>
                                     <field name="uom_id" readonly="1"/>

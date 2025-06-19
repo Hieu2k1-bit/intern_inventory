@@ -8,13 +8,19 @@ class InventoryLine(models.Model):
     _description = 'Inventory Check Line'
 
     check_id = fields.Many2one('intern_inventory.check', string='Inventory Check line', ondelete='cascade')
-    warehouse_id = fields.Many2one("stock.warehouse", string='Warehouse', ondelete='cascade')
+    warehouse_id = fields.Many2one(
+        'stock.warehouse',
+        string='Warehosue',
+        related='location_id.warehouse_id',
+        store=True,
+        readonly=True,
+    )
     product_id = fields.Many2one('product.product', string='Product', ondelete='cascade')
     lot_id = fields.Many2one('stock.lot', string='Lot/Serial Number')
     uom_id = fields.Many2one('uom.uom', string='Unit')
     location_id = fields.Many2one('stock.location', string='Location', ondelete='cascade')
     quant_id = fields.Many2one('stock.quant', string='Quantity')
-    quantity = fields.Float(string='Available Quantity')
+    quantity = fields.Float(string='Available Quantity',compute='_compute_quantities')
     quantity_counted = fields.Float(string='Quantity Counted', digits=(16, 0))
     diff_quantity = fields.Float(string='Difference', digits=(16, 0), compute='_compute_difference', store=True,
                                  default='0')
@@ -33,6 +39,7 @@ class InventoryLine(models.Model):
         for record in self:
             record.location_display_name = record.location_id.name if record.location_id else "All Locations"
 
+    #Đạt
     def action_apply(self):
         self.ensure_one()
         for line in self:
@@ -59,3 +66,19 @@ class InventoryLine(models.Model):
     def action_delete(self):
         self.ensure_one()
         self.unlink()  # Xóa dòng kiểm kê hiện tại
+
+    @api.depends('product_id', 'location_id', 'lot_id')
+    def _compute_quantities(self):
+        for line in self:
+            if not line.product_id or not line.location_id:
+                line.quantity = 0.0
+            else:
+                domain = [
+                    ('product_id', '=', line.product_id.id),
+                    ('location_id', '=', line.location_id.id),
+                ]
+                if line.lot_id:
+                    domain.append(('lot_id', '=', line.lot_id.id))
+
+                quants = self.env['stock.quant'].search(domain)
+                line.quantity = sum(quants.mapped('quantity'))

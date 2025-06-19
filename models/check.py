@@ -5,6 +5,7 @@ from odoo import models, fields, api, _
 from openpyxl.reader.excel import load_workbook
 from reportlab.graphics.shapes import translate
 import xlsxwriter
+from odoo.exceptions import UserError
 
 try:
     import openpyxl
@@ -248,6 +249,19 @@ class InternInventory(models.Model):
                 if not product:
                     return {'status': 'error', 'message': f"Product code not found: {product_name}"}
 
+                if (not warehouse or not location) and product:
+                    quant_auto = self.env['stock.quant'].search([
+                        ('product_id', '=', product.id),
+                        ('quantity', '>', 0)
+                    ], order='quantity desc', limit=1)
+
+                    if quant_auto:
+                        # Nếu chưa có location hoặc warehouse thì gán vào
+                        if not location:
+                            location = quant_auto.location_id
+                        if not warehouse:
+                            warehouse = self.get_warehouse_from_location(location)
+
                 # Tìm lot, uom
                 lot_name = row_data.get('Số lô/serial')
                 lot = False
@@ -327,7 +341,6 @@ class InternInventory(models.Model):
             main_data.pop('location_id', None)
             # Viết dữ liệu phiếu kiểm kê
             self.write(main_data)
-            self.line_ids.unlink()
             self.write({'line_ids': line_vals})
             self.write({'is_imported': True})
 
@@ -376,59 +389,45 @@ class InternInventory(models.Model):
         return result
 
     # Bảo
-    # def action_open_product_selection(self):
-    #     self.ensure_one()
-    #
-    #     # Nếu không có kho hoặc vị trí cụ thể nào được chọn, thêm trực tiếp tất cả sản phẩm có tồn kho
-    #     if not self.warehouse_id and not self.location_id:
-    #         all_quants = self.env['stock.quant'].search([])
-    #         existing_product_location_ids = self.line_ids.read_group(
-    #             [('check_id', '=', self.id)],
-    #             ['product_id', 'location_id'],
-    #             ['product_id', 'location_id']
-    #         )
-    #         existing_product_location_set = {
-    #             (item['product_id'][0], item['location_id'][0]) for item in existing_product_location_ids
-    #         }
-    #
-    #         products_to_add = []
-    #         for quant in all_quants:
-    #             product_location_key = (quant.product_id.id, quant.location_id.id)
-    #             if product_location_key not in existing_product_location_set:
-    #                 products_to_add.append({
-    #                     'check_id': self.id,
-    #                     'product_id': quant.product_id.id,
-    #                     'location_id': quant.location_id.id,
-    #                     'lot_id': quant.lot_id.id if quant.lot_id else False,
-    #                     'uom_id': quant.product_id.uom_id.id,
-    #                     'quantity': quant.quantity,
-    #                     'quantity_counted': 0.0,
-    #                 })
-    #                 existing_product_location_set.add(product_location_key)
-    #
-    #         if products_to_add:
-    #             self.env['intern_inventory.line'].create(products_to_add)
-    #
-    #         # Tải lại chế độ xem biểu mẫu hiện tại để hiển thị các dòng mới được thêm
-    #         return {
-    #             'type': 'ir.actions.act_window',
-    #             'res_model': 'intern_inventory.check',
-    #             'view_mode': 'form',
-    #             'res_id': self.id,
-    #             'target': 'current',
-    #         }
-    #
-    #     # Ngược lại, mở trình hướng dẫn để lựa chọn
-    #     return {
-    #         'name': 'Chọn Sản phẩm',
-    #         'type': 'ir.actions.act_window',
-    #         'res_model': 'product.selection.wizard',
-    #         'view_mode': 'form',
-    #         'target': 'new',
-    #         'context': {
-    #             'default_check_id': self.id,
-    #         }
-    #     }
+    def action_open_product_selection(self):
+        self.ensure_one()
+        self.env['product.selection.line.wizard'].search([('check_id', '=', self.id)]).unlink()
+
+        # Khởi tạo domain quants
+        quant_domain = [('quantity', '>', 0)]
+
+        if self.location_id:
+            quant_domain.append(('location_id', '=', self.location_id.id))
+        elif self.warehouse_id:
+            # Lấy tất cả các location thuộc warehouse
+            warehouse_locations = self.env['stock.location'].search([
+                ('id', 'child_of', self.warehouse_id.view_location_id.id)
+            ])
+            quant_domain.append(('location_id', 'in', warehouse_locations.ids))
+        # else: không cần thêm điều kiện gì thêm, sẽ lấy tất cả tồn kho
+
+        # Truy vấn các quants phù hợp
+        quants = self.env['stock.quant'].search(quant_domain)
+
+        for quant in quants:
+            self.env['product.selection.line.wizard'].create({
+                'product_id': quant.product_id.id,
+                'internal_reference': quant.product_id.default_code,
+                'location_id': quant.location_id.id,
+                'check_id': self.id,
+            })
+
+        return {
+            'name': 'Chọn sản phẩm từ tồn kho',
+            'type': 'ir.actions.act_window',
+            'res_model': 'product.selection.line.wizard',
+            'view_mode': 'tree,form',
+            'domain': [('check_id', '=', self.id)],
+            'target': 'new',
+            'context': {
+                'default_check_id': self.id,
+            },
+        }
 
     def action_export_excel(self):
         for rec in self:

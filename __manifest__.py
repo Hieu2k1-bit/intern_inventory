@@ -26,7 +26,9 @@
     'data': [
         'security/ir.model.access.csv',
         'wizard/wizard_import_kiemke_view.xml',
+        'wizard/wizard_product_view.xml',
         'views/inventory_check.xml',
+
     ],
     # only loaded in demonstration mode
     'demo': [
