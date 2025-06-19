@@ -1,0 +1,27 @@
+<odoo>
+    <data>
+        <record id="project_wizard_import_form" model="ir.ui.view">
+            <field name="name">project.wizard.import.form</field>
+            <field name="model">project.wizard.import</field>
+            <field name="arch" type="xml">
+                <form string="Import dữ liệu">
+                    <group>
+                        <field name="file" widget="many2many_binary"/>
+                    </group>
+                    <footer>
+                        <button name="action_import" type="object" string="Import" class="oe_highlight"/>
+                        <button string="Cancel" class="btn-secondary" special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+        <record id="project_wizard_import_action" model="ir.actions.act_window">
+            <field name="name">Import dữ liệu</field>
+            <field name="res_model">project.wizard.import</field>
+            <field name="view_mode">form</field>
+            <field name="view_id" ref="project_wizard_import_form"/>
+            <field name="target">new</field>
+        </record>
+    </data>
+</odoo>
