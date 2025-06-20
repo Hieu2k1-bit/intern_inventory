@@ -25,7 +25,7 @@
     # always loaded
     'data': [
         'security/ir.model.access.csv',
-        'wizard/wizard_import_kiemke_view.xml',
+        'wizard/wizard_import_view.xml',
         'wizard/wizard_product_view.xml',
         'views/inventory_check.xml',
 
