@@ -5,24 +5,27 @@
         <field name="arch" type="xml">
             <form string="Inventory check sheet">
                 <header>
-                    <button name="action_complete" string="Completed" type="object" class="oe_highlight"/>
+<!--                    <button name="action_complete" string="Completed" type="object" class="oe_highlight"/>-->
                     <field name="state" widget="statusbar" statusbar_visible="ready, done"/>
-                    <button name="action_apply_all" string="Apply all" type="object" class="oe_highlight"/>
+<!--                    <button name="action_apply_all" string="Apply all" type="object" class="oe_highlight"/>-->
                     <button string="Cancel" class="btn-secondary" special="cancel"/>
-                    <button name="action_export_excel"
-                            type="object"
-                            string="Export Excel"
-                            class="btn-primary"/>
+<!--                    <button name="action_export_excel"-->
+<!--                            type="object"-->
+<!--                            string="Export Excel"-->
+<!--                            class="btn-primary"/>-->
                     <button name="%(project_wizard_import_action)d" type="action" string="Import data"
-                            class="btn-primary"  attrs="{'invisible': [('state', '=', 'done')]}"/>
+                            class="btn-primary" attrs="{'invisible': [('state', '=', 'done')]}"/>
                 </header>
                 <sheet>
                     <group>
                         <group>
                             <field name="name" attrs="{'readonly': [('state', '=', 'done')]}"/>
-                            <field name="warehouse_id"
+                            <field name="warehouse_ids"
+                                   widget="many2many_tags"
                                    attrs="{'readonly': [('state', '=', 'done')]}"/>
-                            <field name="location_id" attrs="{'readonly': [('state', '=', 'done')]}"/>
+                            <field name="location_ids"
+                                   widget="many2many_tags"
+                                   attrs="{'readonly': [('state', '=', 'done')]}"/>
                         </group>
                         <group>
                             <field name="create_date" attrs="{'readonly': [('state', '=', 'done')]}"/>
@@ -30,10 +33,10 @@
                             <field name="user_id" attrs="{'readonly': [('state', '=', 'done')]}"/>
                         </group>
                     </group>
-                    <button name="action_open_product_selection"
-                            type="object"
-                            string="Add product"
-                            class="btn-primary"/>
+<!--                    <button name="action_open_product_selection"-->
+<!--                            type="object"-->
+<!--                            string="Add product"-->
+<!--                            class="btn-primary"/>-->
                     <notebook>
                         <page string="Product Information">
                             <field name="line_ids">
@@ -46,12 +49,12 @@
                                     <field name="quantity" readonly="1"/>
                                     <field name="quantity_counted"/>
                                     <field name="diff_quantity" readonly="1"/>
-                                    <button name="action_history" string="History" type="object" class="fa fa-history"
-                                            attrs="{'invisible': [('id', '=', False)]}"/>
-                                    <button name="action_apply" string="Apply" type="object" class="fa fa-floppy-o"
-                                            attrs="{'invisible': [('id', '=', False)]}"/>
-                                    <button name="action_delete" string="Delete" type="object" class="fa fa-times"
-                                            attrs="{'invisible': [('id', '=', False)]}"/>
+<!--                                    <button name="action_history" string="History" type="object" class="fa fa-history"-->
+<!--                                            attrs="{'invisible': [('id', '=', False)]}"/>-->
+<!--                                    <button name="action_apply" string="Apply" type="object" class="fa fa-floppy-o"-->
+<!--                                            attrs="{'invisible': [('id', '=', False)]}"/>-->
+<!--                                    <button name="action_delete" string="Delete" type="object" class="fa fa-times"-->
+<!--                                            attrs="{'invisible': [('id', '=', False)]}"/>-->
                                 </tree>
                             </field>
                         </page>

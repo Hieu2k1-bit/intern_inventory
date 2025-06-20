@@ -10,7 +10,7 @@ class InventoryLine(models.Model):
     check_id = fields.Many2one('intern_inventory.check', string='Inventory Check line', ondelete='cascade')
     warehouse_id = fields.Many2one(
         'stock.warehouse',
-        string='Warehosue',
+        string='Warehouse',
         related='location_id.warehouse_id',
         store=True,
         readonly=True,
@@ -20,33 +20,18 @@ class InventoryLine(models.Model):
     uom_id = fields.Many2one('uom.uom', string='Unit')
     location_id = fields.Many2one('stock.location', string='Location', ondelete='cascade')
     quant_id = fields.Many2one('stock.quant', string='Quantity')
-    quantity = fields.Float(string='Available Quantity',compute='_compute_quantities')
+    quantity = fields.Float(string='Available Quantity', compute='_compute_quantities')
     quantity_counted = fields.Float(string='Quantity Counted', digits=(16, 0))
-    diff_quantity = fields.Float(string='Difference', digits=(16, 0), compute='_compute_difference', store=True,
+    diff_quantity = fields.Float(string='Difference', digits=(16, 0), store=True,
                                  default='0')
-    warehouse_display_name = fields.Char(string='Warehouse Name', compute='_compute_warehouse_display_name',
-                                         store=False)
-    location_display_name = fields.Char(string='Location Name', compute='_compute_location_display_name', store=False)
 
-
-    @api.depends('warehouse_id')
-    def _compute_warehouse_display_name(self):
-        for record in self:
-            record.warehouse_display_name = record.warehouse_id.name if record.warehouse_id else "All Warehouses"
-
-    @api.depends('location_id')
-    def _compute_location_display_name(self):
-        for record in self:
-            record.location_display_name = record.location_id.name if record.location_id else "All Locations"
-
-    #Đạt
+    # Đạt
     def action_apply(self):
         self.ensure_one()
         for line in self:
             line.diff_quantity = abs((line.quantity or 0.0) - (line.quantity_counted or 0.0))
 
-
-    #Việt
+    # Việt
     def action_history(self):
         self.ensure_one()
         action = {

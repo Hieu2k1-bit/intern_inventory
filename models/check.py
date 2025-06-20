@@ -1,5 +1,4 @@
 import base64
-import io
 from io import BytesIO
 from odoo import models, fields, api, _
 from openpyxl.reader.excel import load_workbook
@@ -19,8 +18,8 @@ class InternInventory(models.Model):
 
     name = fields.Char(string='Name', required=True)
 
-    warehouse_id = fields.Many2one('stock.warehouse', string="Warehouse")
-    location_id = fields.Many2one('stock.location', string="Location")
+    warehouse_ids = fields.Many2many('stock.warehouse', string="Warehouse")
+    location_ids = fields.Many2many('stock.location', string="Location")
     user_id = fields.Many2one('res.users', string="Responsible Person", default=lambda self: self.env.user)
     create_date = fields.Datetime(string="Create date", required=True, default=fields.Datetime.now)
     inventory_date = fields.Date(string="Inventory date", required=True, default=fields.Date.today)
@@ -61,35 +60,34 @@ class InternInventory(models.Model):
             else:
                 rec.state_display_name = "Done"
 
-    @api.depends('warehouse_id')
+    @api.depends('warehouse_ids')
     def _compute_warehouse_display_name(self):
         for record in self:
-            record.warehouse_display_name = record.warehouse_id.name if record.warehouse_id else "All Warehouses"
+            names = record.warehouse_ids.mapped('name')
+            record.warehouse_display_name = ', '.join(names) if names else _("All Warehouses")
 
-    @api.depends('location_id')
+    @api.depends('location_ids')
     def _compute_location_display_name(self):
         for record in self:
-            record.location_display_name = record.location_id.name if record.location_id else "All Locations"
+            names = record.location_ids.mapped('name')
+            record.location_display_name = ', '.join(names) if names else _("All Locations")
 
-    @api.onchange('warehouse_id')
-    def _onchange_warehouse_id(self):
-        if self.warehouse_id:
-            # Lọc các vị trí thuộc kho đã chọn
-            self.location_id = False  # Xóa vị trí cũ nếu kho thay đổi
-            return {
-                'domain': {'location_id': [('warehouse_id', '=', self.warehouse_id.id)]}
-            }
+    @api.onchange('warehouse_ids')
+    def _onchange_warehouse_ids(self):
+        if self.warehouse_ids:
+            warehouse_view_locations = self.warehouse_ids.mapped('view_location_id')
         else:
-            # Nếu không chọn kho: lọc tất cả location trong tất cả các kho
+            # Lấy tất cả các view location của tất cả kho
             all_warehouses = self.env['stock.warehouse'].search([])
             warehouse_view_locations = all_warehouses.mapped('view_location_id')
-            all_locations = self.env['stock.location'].search([
-                ('location_id', 'child_of', warehouse_view_locations.ids),
-                ('usage', '=', 'internal')
-            ])
-            return {
-                'domain': {'location_id': [('id', 'in', all_locations.ids)]}
-            }
+
+        all_locations = self.env['stock.location'].search([
+            ('location_id', 'child_of', warehouse_view_locations.ids),
+            ('usage', '=', 'internal')
+        ])
+        return {
+            'domain': {'location_ids': [('id', 'in', all_locations.ids)]}
+        }
 
     def action_ready(self):
         self.ensure_one()
@@ -109,6 +107,11 @@ class InternInventory(models.Model):
 
     def import_data(self, file):
         self.ensure_one()
+        if self.location_ids and not self.warehouse_ids:
+            return {
+                'status': 'error',
+                'message': _("You must select the warehouse once you have selected the location!")
+            }
         if self.state != 'ready':
             raise UserError(_("Import is only allowed when the status is 'Ready'."))
         if not openpyxl:
@@ -124,10 +127,11 @@ class InternInventory(models.Model):
                 }
             project_sheet = workbook['Phiếu kiểm kê']
             # Extract headers and rows for 'Phiếu kiểm kê' sheet
+            # get the first row value of the cel (header)
             project_header = [
                 str(cell.value or '').strip()
                 for cell in next(project_sheet.iter_rows(min_row=1, max_row=1))
-            ]  # lấy giá trị dòng đầu của cel (header)
+            ]
             project_rows = list(project_sheet.iter_rows(min_row=2, values_only=True))  # lấy giá trị trong ô thay vì cel
             print('project_header', project_header)
             print('Number of project rows', project_rows)
@@ -142,41 +146,21 @@ class InternInventory(models.Model):
                     }
             # Header mapping for 'Phiếu kiểm kê' sheet
             project_header_mapping = {
-                'Kho': 'warehouse_id',
-                'Vị trí': 'location_id',
+                'Kho': 'warehouse_ids',
+                'Vị trí': 'location_ids',
                 'Sản phẩm': 'product_id',
                 'Số lô/serial': 'lot_id',
                 'ĐVT': 'uom_id',
                 'Số lượng hiện có': 'quantity',
                 'Số lượng đã đếm': 'quantity_counted',
             }
-            # Collect all project codes from 'Phiếu kiểm kê' sheet
-            project_codes = set()
-            for row in project_rows:
-                # Đảm bảo tất cả các giá trị trong row_data là chuỗi
-                row_data = {}
-                for i in range(len(project_header)):
-                    if i < len(row):
-                        header_key = project_header[i]
-                        cell_value = row[i]
-                        row_data[header_key] = str(cell_value or '').strip()
-                    else:
-                        # Gán chuỗi rỗng nếu hàng có ít cột hơn tiêu đề
-                        row_data[project_header[i]] = ''
-                code = row_data.get('Sản phẩm')
-                if code is not None:
-                    project_codes.add(str(code).strip())
-                else:
-                    return {
-                        'status': 'error',
-                        'message': f"Missing 'Sản phẩm' in the data row of the 'Phiếu kiểm kê' sheet: {row_data}"
-                    }
-            # Gom nhóm dữ liệu theo 'Phiếu kiểm kê'
+            # Group data by 'Inventory sheet'
             line_vals = []
             processed_products = set()
+            processed_lines = set()
             valid_line_count = 0
             for row in project_rows:
-                # Tạo dict row_data từ dòng Excel
+                # Create row_data dict from Excel row
                 row_data = {}
                 for i in range(len(project_header)):
                     if i < len(row):
@@ -186,32 +170,34 @@ class InternInventory(models.Model):
                     else:
                         row_data[project_header[i]] = ''
 
-                # --- Xử lý Kho ---
+                # --- Warehouse ---
                 warehouse = False
                 warehouse_name_from_excel = row_data.get('Kho')
                 warehouse_name_from_excel = warehouse_name_from_excel.strip() if warehouse_name_from_excel else ''
 
-                if self.warehouse_id:
-                    if not warehouse_name_from_excel:
-                        continue  # Bỏ qua dòng kho trống khi form chọn kho cụ thể
-                    if warehouse_name_from_excel != self.warehouse_id.name.strip():
-                        continue  # Bỏ qua dòng kho không đúng kho form
+                if self.warehouse_ids:
+                    # If the user selects a specific warehouse, the Excel row must have warehouse and belong to warehouse_ids
+                    if not warehouse_name_from_excel or warehouse_name_from_excel not in self.warehouse_ids.mapped(
+                            'name'):
+                        continue
 
                 if warehouse_name_from_excel:
                     warehouse = self.env['stock.warehouse'].search([('name', '=', warehouse_name_from_excel)], limit=1)
                     if not warehouse:
                         return {'status': 'error', 'message': f"No warehouse found: '{warehouse_name_from_excel}'."}
 
-                # --- Xử lý Vị trí ---
+                # --- Location ---
                 location = False
                 location_name_from_excel = row_data.get('Vị trí')
                 location_name_from_excel = location_name_from_excel.strip() if location_name_from_excel else ''
 
-                if self.location_id:
-                    if not location_name_from_excel:
-                        continue  # Bỏ qua dòng vị trí trống khi form chọn vị trí cụ thể
-                    if location_name_from_excel != self.location_id.name.strip():
-                        continue  # Bỏ qua dòng vị trí không đúng vị trí form
+                if self.location_ids:
+                    # If the user selects a specific location, the Excel row must have a location and belong to location_ids
+                    if not location_name_from_excel or location_name_from_excel not in self.location_ids.mapped('name'):
+                        continue
+                else:
+                    # If the user does not select any location, all locations are considered selected.
+                    pass  # no further testing required
 
                 location_provided_in_excel = False
                 if location_name_from_excel:
@@ -242,26 +228,39 @@ class InternInventory(models.Model):
                 product_name = row_data.get('Sản phẩm')
                 if not product_name or not isinstance(product_name, str):
                     return {'status': 'error', 'message': _("Invalid or missing product name.")}
-                product_key = product_name.strip().lower()
-                if product_key in processed_products:
-                    continue
+                product_key = product_name.strip()
                 processed_products.add(product_key)
                 product = self.env['product.product'].search([('default_code', '=', product_name)], limit=1)
                 if not product:
                     return {'status': 'error', 'message': f"Product code not found: {product_name}"}
 
-                if (not warehouse or not location) and product:
-                    quant_auto = self.env['stock.quant'].search([
+                if not warehouse:
+                    return {
+                        'status': 'error',
+                        'message': f"Product '{product.name}' not in stock '{warehouse_name_from_excel}' or invalid warehouse name."
+                    }
+                if not self.warehouse_ids and warehouse:
+                    internal_locations = self.env['stock.location'].search([
+                        ('usage', '=', 'internal'),
+                        ('location_id', 'child_of', warehouse.view_location_id.id)
+                    ])
+                    product_quants = self.env['stock.quant'].search([
                         ('product_id', '=', product.id),
+                        ('location_id', 'in', internal_locations.ids),
                         ('quantity', '>', 0)
-                    ], order='quantity desc', limit=1)
+                    ], limit=1)
 
-                    if quant_auto:
-                        # Nếu chưa có location hoặc warehouse thì gán vào
-                        if not location:
-                            location = quant_auto.location_id
-                        if not warehouse:
-                            warehouse = self.get_warehouse_from_location(location)
+                    if not product_quants:
+                        return {
+                            'status': 'error',
+                            'message': f"Product '{product.name}' does not exist in warehouse '{warehouse.name}'."
+                        }
+
+                # Nếu thiếu vị trí thì cũng không tự động gán nữa
+                combo_key = (product_key, warehouse.id if warehouse else False, location.id if location else False)
+                if combo_key in processed_lines:
+                    continue  # đã xử lý rồi, bỏ qua
+                processed_lines.add(combo_key)  # đánh dấu đã xử lý
 
                 # Tìm lot, uom
                 lot_name = row_data.get('Số lô/serial')
@@ -284,11 +283,13 @@ class InternInventory(models.Model):
 
                 if location:
                     quant_domain.append(('location_id', '=', location.id))
-                elif warehouse:
-                    all_warehouse_internal_locations = self.env['stock.location'].search(
-                        [('warehouse_id', '=', warehouse.id), ('usage', '=', 'internal')])
-                    if all_warehouse_internal_locations:
-                        quant_domain.append(('location_id', 'in', all_warehouse_internal_locations.ids))
+                elif self.warehouse_ids:
+                    all_locations = self.env['stock.location'].search([
+                        ('warehouse_id', 'in', self.warehouse_ids.ids),
+                        ('usage', '=', 'internal')
+                    ])
+                    if all_locations:
+                        quant_domain.append(('location_id', 'in', all_locations.ids))
                     else:
                         return {'status': 'error',
                                 'message': f"No internal locations found in the warehouse: {warehouse.name}."}
@@ -314,7 +315,7 @@ class InternInventory(models.Model):
                     'quant_id': quant.id if quant else False,
                     'quantity': quant.quantity if quant else 0,
                     'quantity_counted': row_data.get('Số lượng đã đếm') or 0,
-                    'warehouse_id': warehouse.id if warehouse else False,
+                    # 'warehouse_id': warehouse.id if warehouse else False,
                     'location_id': location.id if location else False,
                 }))
                 valid_line_count += 1
@@ -338,12 +339,11 @@ class InternInventory(models.Model):
             if not main_data.get('name'):
                 main_data['name'] = self.name
             # Xóa kho và vị trí khỏi dữ liệu để không tự động ghi
-            main_data.pop('warehouse_id', None)
-            main_data.pop('location_id', None)
+            main_data.pop('warehouse_ids', None)
+            main_data.pop('location_ids', None)
             # Viết dữ liệu phiếu kiểm kê
             self.write(main_data)
             self.write({'line_ids': line_vals})
-            self.write({'is_imported': True})
 
             return {
                 'status': 'success',
@@ -362,10 +362,10 @@ class InternInventory(models.Model):
             value = row_data.get(excel_col)
             if not value:
                 continue
-            if field_name in ['warehouse_id', 'location_id', 'uom_id', 'lot_id', 'product_id']:
+            if field_name in ['warehouse_ids', 'location_ids', 'uom_id', 'lot_id', 'product_id']:
                 model = {
-                    'warehouse_id': 'stock.warehouse',
-                    'location_id': 'stock.location',
+                    'warehouse_ids': 'stock.warehouse',
+                    'location_ids': 'stock.location',
                     'uom_id': 'uom.uom',
                     'lot_id': 'stock.lot',
                     'product_id': 'product.product',
@@ -390,122 +390,122 @@ class InternInventory(models.Model):
         return result
 
     # Bảo
-    def action_open_product_selection(self):
-        self.ensure_one()
-        self.env['product.selection.line.wizard'].search([('check_id', '=', self.id)]).unlink()
-
-        # Khởi tạo domain quants
-        quant_domain = [('quantity', '>', 0)]
-
-        if self.location_id:
-            quant_domain.append(('location_id', '=', self.location_id.id))
-        elif self.warehouse_id:
-            # Lấy tất cả các location thuộc warehouse
-            warehouse_locations = self.env['stock.location'].search([
-                ('id', 'child_of', self.warehouse_id.view_location_id.id)
-            ])
-            quant_domain.append(('location_id', 'in', warehouse_locations.ids))
-        # else: không cần thêm điều kiện gì thêm, sẽ lấy tất cả tồn kho
-
-        # Truy vấn các quants phù hợp
-        quants = self.env['stock.quant'].search(quant_domain)
-
-        for quant in quants:
-            self.env['product.selection.line.wizard'].create({
-                'product_id': quant.product_id.id,
-                'internal_reference': quant.product_id.default_code,
-                'location_id': quant.location_id.id,
-                'check_id': self.id,
-            })
-
-        return {
-            'name': 'Chọn sản phẩm từ tồn kho',
-            'type': 'ir.actions.act_window',
-            'res_model': 'product.selection.line.wizard',
-            'view_mode': 'tree,form',
-            'domain': [('check_id', '=', self.id)],
-            'target': 'new',
-            'context': {
-                'default_check_id': self.id,
-            },
-        }
-
-    def action_export_excel(self):
-        for rec in self:
-            output = BytesIO()
-            workbook = xlsxwriter.Workbook(output, {'in_memory': True})
-            sheet = workbook.add_worksheet('Kiểm kê kho')
-
-            sheet.set_column(0, 0, 20)
-            sheet.set_column(1, 1, 15)
-            sheet.set_column(2, 2, 20)
-            sheet.set_column(3, 3, 15)
-            sheet.set_column(4, 4, 20)
-            sheet.set_column(5, 5, 25)
-            sheet.set_column(6, 6, 20)
-            sheet.set_column(7, 7, 10)
-            sheet.set_column(8, 8, 15)
-            sheet.set_column(9, 9, 15)
-
-            header_format = workbook.add_format({
-                'bold': True,
-                'font_color': 'red',
-                'align': 'center',
-                'valign': 'vcenter',
-                'bg_color': '#F9F9F9',
-                'border': 1
-            })
-
-            headers = [
-                'Phiếu kiểm kê', 'Ngày kiểm kê', 'Người kiểm kê',
-                'Kho', 'Vị trí', 'Sản phẩm', 'Số lô/serial',
-                'ĐVT', 'Số lượng hiện có', 'Số lượng đã đếm'
-            ]
-            for col_num, header in enumerate(headers):
-                sheet.write(0, col_num, header, header_format)
-
-            row = 1
-            for line in rec.line_ids:
-                sheet.write(row, 0, rec.name or '')
-                sheet.write(row, 1, str(rec.inventory_date or ''))
-                sheet.write(row, 2, rec.user_id.name or '')
-                sheet.write(row, 3, rec.warehouse_id.name if rec.warehouse_id else 'Tất cả kho')
-                sheet.write(row, 4, line.location_id.display_name or line.location_id.complete_name or '')
-                sheet.write(row, 5, line.product_id.name or '')
-                sheet.write(row, 6, line.lot_id.name if line.lot_id else '')
-                sheet.write(row, 7, line.uom_id.name if line.uom_id else '')
-                sheet.write(row, 8, line.quantity or 0)
-                sheet.write(row, 9, line.quantity_counted or 0)
-                row += 1
-
-            workbook.close()
-            output.seek(0)
-            data = output.read()
-
-            export_attachment = self.env['ir.attachment'].create({
-                'name': f'PhieuKiemKe_{rec.name}.xlsx',
-                'type': 'binary',
-                'datas': base64.b64encode(data),
-                'res_model': 'intern_inventory.check',
-                'res_id': rec.id,
-            })
-
-            return {
-                'type': 'ir.actions.act_url',
-                'url': f'/web/content/{export_attachment.id}?download=true',
-                'target': 'self',
-            }
-
-    # Đạt
-    def action_complete(self):
-        self.ensure_one()  # Dam bao chi xu ly mot form mot luc
-        self.write({'state': 'done',
-                    'create_date': fields.Datetime.now()})  # Tu dong luu cac thay doi
-        return True
-        # self.env.ref('intern_inventory.action_inventory_check').read())[0] # Save and move to list view
-
-    def action_apply_all(self):
-        self.ensure_one()
-        for line in self.line_ids:
-            line.diff_quantity = abs((line.quantity or 0.0) - (line.quantity_counted or 0.0))
-
+    # def action_open_product_selection(self):
+    #     self.ensure_one()
+    #     self.env['product.selection.line.wizard'].search([('check_id', '=', self.id)]).unlink()
+    #
+    #     # Khởi tạo domain quants
+    #     quant_domain = [('quantity', '>', 0)]
+    #
+    #     if self.location_id:
+    #         quant_domain.append(('location_id', '=', self.location_id.id))
+    #     elif self.warehouse_id:
+    #         # Lấy tất cả các location thuộc warehouse
+    #         warehouse_locations = self.env['stock.location'].search([
+    #             ('id', 'child_of', self.warehouse_id.view_location_id.id)
+    #         ])
+    #         quant_domain.append(('location_id', 'in', warehouse_locations.ids))
+    #     # else: không cần thêm điều kiện gì thêm, sẽ lấy tất cả tồn kho
+    #
+    #     # Truy vấn các quants phù hợp
+    #     quants = self.env['stock.quant'].search(quant_domain)
+    #
+    #     for quant in quants:
+    #         self.env['product.selection.line.wizard'].create({
+    #             'product_id': quant.product_id.id,
+    #             'internal_reference': quant.product_id.default_code,
+    #             'location_id': quant.location_id.id,
+    #             'check_id': self.id,
+    #         })
+    #
+    #     return {
+    #         'name': 'Chọn sản phẩm từ tồn kho',
+    #         'type': 'ir.actions.act_window',
+    #         'res_model': 'product.selection.line.wizard',
+    #         'view_mode': 'tree,form',
+    #         'domain': [('check_id', '=', self.id)],
+    #         'target': 'new',
+    #         'context': {
+    #             'default_check_id': self.id,
+    #         },
+    #     }
+    #
+    # def action_export_excel(self):
+    #     for rec in self:
+    #         output = BytesIO()
+    #         workbook = xlsxwriter.Workbook(output, {'in_memory': True})
+    #         sheet = workbook.add_worksheet('Kiểm kê kho')
+    #
+    #         sheet.set_column(0, 0, 20)
+    #         sheet.set_column(1, 1, 15)
+    #         sheet.set_column(2, 2, 20)
+    #         sheet.set_column(3, 3, 15)
+    #         sheet.set_column(4, 4, 20)
+    #         sheet.set_column(5, 5, 25)
+    #         sheet.set_column(6, 6, 20)
+    #         sheet.set_column(7, 7, 10)
+    #         sheet.set_column(8, 8, 15)
+    #         sheet.set_column(9, 9, 15)
+    #
+    #         header_format = workbook.add_format({
+    #             'bold': True,
+    #             'font_color': 'red',
+    #             'align': 'center',
+    #             'valign': 'vcenter',
+    #             'bg_color': '#F9F9F9',
+    #             'border': 1
+    #         })
+    #
+    #         headers = [
+    #             'Phiếu kiểm kê', 'Ngày kiểm kê', 'Người kiểm kê',
+    #             'Kho', 'Vị trí', 'Sản phẩm', 'Số lô/serial',
+    #             'ĐVT', 'Số lượng hiện có', 'Số lượng đã đếm'
+    #         ]
+    #         for col_num, header in enumerate(headers):
+    #             sheet.write(0, col_num, header, header_format)
+    #
+    #         row = 1
+    #         for line in rec.line_ids:
+    #             sheet.write(row, 0, rec.name or '')
+    #             sheet.write(row, 1, str(rec.inventory_date or ''))
+    #             sheet.write(row, 2, rec.user_id.name or '')
+    #             sheet.write(row, 3, rec.warehouse_id.name if rec.warehouse_id else 'Tất cả kho')
+    #             sheet.write(row, 4, line.location_id.display_name or line.location_id.complete_name or '')
+    #             sheet.write(row, 5, line.product_id.name or '')
+    #             sheet.write(row, 6, line.lot_id.name if line.lot_id else '')
+    #             sheet.write(row, 7, line.uom_id.name if line.uom_id else '')
+    #             sheet.write(row, 8, line.quantity or 0)
+    #             sheet.write(row, 9, line.quantity_counted or 0)
+    #             row += 1
+    #
+    #         workbook.close()
+    #         output.seek(0)
+    #         data = output.read()
+    #
+    #         export_attachment = self.env['ir.attachment'].create({
+    #             'name': f'PhieuKiemKe_{rec.name}.xlsx',
+    #             'type': 'binary',
+    #             'datas': base64.b64encode(data),
+    #             'res_model': 'intern_inventory.check',
+    #             'res_id': rec.id,
+    #         })
+    #
+    #         return {
+    #             'type': 'ir.actions.act_url',
+    #             'url': f'/web/content/{export_attachment.id}?download=true',
+    #             'target': 'self',
+    #         }
+    #
+    # # Đạt
+    # def action_complete(self):
+    #     self.ensure_one()  # Dam bao chi xu ly mot form mot luc
+    #     self.write({'state': 'done',
+    #                 'create_date': fields.Datetime.now()})  # Tu dong luu cac thay doi
+    #     return True
+    #     # self.env.ref('intern_inventory.action_inventory_check').read())[0] # Save and move to list view
+    #
+    # def action_apply_all(self):
+    #     self.ensure_one()
+    #     for line in self.line_ids:
+    #         line.diff_quantity = abs((line.quantity or 0.0) - (line.quantity_counted or 0.0))
+    #
