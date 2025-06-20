@@ -14,21 +14,20 @@
                             string="Export Excel"
                             class="btn-primary"/>
                     <button name="%(project_wizard_import_action)d" type="action" string="Import data"
-                            class="btn-primary"/>
+                            class="btn-primary"  attrs="{'invisible': [('state', '=', 'done')]}"/>
                 </header>
                 <sheet>
-                    <field name="is_imported" invisible="1"/>
                     <group>
                         <group>
                             <field name="name" attrs="{'readonly': [('state', '=', 'done')]}"/>
                             <field name="warehouse_id"
                                    attrs="{'readonly': [('state', '=', 'done')]}"/>
-                            <field name="location_id" attrs="{'readonly': [('is_imported', '=', True)]}"/>
+                            <field name="location_id" attrs="{'readonly': [('state', '=', 'done')]}"/>
                         </group>
                         <group>
-                            <field name="create_date"/>
-                            <field name="inventory_date"/>
-                            <field name="user_id"/>
+                            <field name="create_date" attrs="{'readonly': [('state', '=', 'done')]}"/>
+                            <field name="inventory_date" attrs="{'readonly': [('state', '=', 'done')]}"/>
+                            <field name="user_id" attrs="{'readonly': [('state', '=', 'done')]}"/>
                         </group>
                     </group>
                     <button name="action_open_product_selection"

@@ -52,7 +52,6 @@ class InternInventory(models.Model):
     quantity = fields.Float(string="Available Quantity")
     quantity_counted = fields.Float(string="Quantity Counted")
     line_ids = fields.One2many('inventory.line', 'check_id', string='Product Check Lines')
-    is_imported = fields.Boolean(string='Imported', default=False)
 
     @api.depends('state')
     def _compute_state_display_name(self):
@@ -110,6 +109,8 @@ class InternInventory(models.Model):
 
     def import_data(self, file):
         self.ensure_one()
+        if self.state != 'ready':
+            raise UserError(_("Import is only allowed when the status is 'Ready'."))
         if not openpyxl:
             return {'status': 'error', 'message': _('Library openpyxl is not installed.')}
         try:
