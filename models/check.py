@@ -213,7 +213,7 @@ class InternInventory(models.Model):
 
                     location = self.env['stock.location'].search(location_domain, limit=1)
                     if not location:
-                        warehouse_part = f"trong kho '{warehouse.name}'" if warehouse else ""
+                        warehouse_part = f"In stock '{warehouse.name}' if warehouse else ''"
                         return {'status': 'error',
                                 'message': f"Location not found: '{location_name_from_excel}' {warehouse_part}."}
 
@@ -256,11 +256,11 @@ class InternInventory(models.Model):
                             'message': f"Product '{product.name}' does not exist in warehouse '{warehouse.name}'."
                         }
 
-                # Nếu thiếu vị trí thì cũng không tự động gán nữa
+
                 combo_key = (product_key, warehouse.id if warehouse else False, location.id if location else False)
                 if combo_key in processed_lines:
-                    continue  # đã xử lý rồi, bỏ qua
-                processed_lines.add(combo_key)  # đánh dấu đã xử lý
+                    continue
+                processed_lines.add(combo_key)
 
                 # Tìm lot, uom
                 lot_name = row_data.get('Số lô/serial')
@@ -315,7 +315,6 @@ class InternInventory(models.Model):
                     'quant_id': quant.id if quant else False,
                     'quantity': quant.quantity if quant else 0,
                     'quantity_counted': row_data.get('Số lượng đã đếm') or 0,
-                    # 'warehouse_id': warehouse.id if warehouse else False,
                     'location_id': location.id if location else False,
                 }))
                 valid_line_count += 1
@@ -370,7 +369,7 @@ class InternInventory(models.Model):
                     'lot_id': 'stock.lot',
                     'product_id': 'product.product',
                 }[field_name]
-                model_env = self.env[model].with_context(lang='en_US')
+                model_env = self.env[model]
                 if field_name == 'product_id':
                     domain = [('default_code', '=', str(value))]
                 else:
@@ -381,7 +380,7 @@ class InternInventory(models.Model):
                         'status': 'error',
                         'message': f"Not found '{value}' in '{excel_col}' (model {model})"
                     }
-                result[field_name if field_name != 'product_id' else 'product_id'] = record.id
+                result[field_name] = record.id
             else:
                 result[field_name] = value
         inventory_check_name = row_data.get('Phiếu kiểm kê')
