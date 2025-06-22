@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
-    <record id="my_module_view_move_line_tree_inherit" model="ir.ui.view">
+    <record id="intern_inventory_view_move_line_tree_inherit" model="ir.ui.view">
         <field name="name">inventory.line.stock.move.line.tree.inherit</field>
         <field name="model">stock.move.line</field>
         <field name="inherit_id" ref="stock.view_move_line_tree"/>
-        <field name="arch" type="xml">
+        <field name="arch" type="xml" >
             <xpath expr="//field[@name='qty_done']" position="attributes">
                 <attribute name="decoration-success">True</attribute>
                 <attribute name="decoration-warning">False</attribute>
@@ -16,7 +16,7 @@
         </field>
     </record>
 
-    <record id="my_module_view_move_line_tree_detailed_inherit" model="ir.ui.view">
+    <record id="intern_inventory_view_move_line_tree_detailed_inherit" model="ir.ui.view">
         <field name="name">inventory.line.stock.move.line.tree.detailed.inherit</field>
         <field name="model">stock.move.line</field>
         <field name="inherit_id" ref="stock.view_move_line_tree_detailed"/>
@@ -27,7 +27,7 @@
         </field>
     </record>
 
-    <record id="my_module_view_move_line_form_inherit" model="ir.ui.view">
+    <record id="intern_inventory_view_move_line_form_inherit" model="ir.ui.view">
         <field name="name">inventory.line.stock.move.line.form.inherit</field>
         <field name="model">stock.move.line</field>
         <field name="inherit_id" ref="stock.view_move_line_form"/>
@@ -37,27 +37,27 @@
         </field>
     </record>
 
-    <record id="my_module_view_move_line_mobile_form_inherit" model="ir.ui.view">
+    <record id="intern_inventory_view_move_line_mobile_form_inherit" model="ir.ui.view">
         <field name="name">inventory.line.stock.move.line.mobile.form.inherit</field>
         <field name="model">stock.move.line</field>
         <field name="inherit_id" ref="stock.view_move_line_mobile_form"/>
         <field name="arch" type="xml">
             <xpath expr="//field[@name='qty_done']" position="after">
-                <field name="picking_partner_id" string="Đối tác liên quan (Mobile)"/>
+                <field name="picking_partner_id" string="Related Partners (Mobile)"/>
             </xpath>
         </field>
     </record>
 
-    <record id="my_module_stock_move_line_view_search_inherit" model="ir.ui.view">
+    <record id="intern_inventory_stock_move_line_view_search_inherit" model="ir.ui.view">
         <field name="name">inventory.line.stock.move.line.search.inherit</field>
         <field name="model">stock.move.line</field>
         <field name="inherit_id" ref="stock.stock_move_line_view_search"/>
         <field name="arch" type="xml">
             <xpath expr="//filter[@name='done']" position="after">
-                <filter string="Bộ lọc tùy chỉnh của tôi" name="my_custom_filter" domain="[('qty_done', '&gt;', 10)]"/>
+                <filter string="My custom filters" name="my_custom_filter" domain="[('qty_done', '&gt;', 10)]"/>
             </xpath>
             <xpath expr="//group[@name='groupby']" position="inside">
-                <filter string="Thực hiện bởi người dùng" name="by_create_uid" domain="[]" context="{'group_by': 'create_uid'}"/>
+                <filter string="Made by user" name="by_create_uid" domain="[]" context="{'group_by': 'create_uid'}"/>
             </xpath>
         </field>
     </record>
@@ -68,7 +68,7 @@
         <field name="inherit_id" ref="stock.view_stock_move_line_kanban"/>
         <field name="arch" type="xml">
             <xpath expr="//field[@name='reference']" position="after">
-                <field name="create_uid" string="Người tạo"/>
+                <field name="create_uid" string="Done by"/>
             </xpath>
              <xpath expr="//div[strong/field[@name='product_id']]" position="replace">
                 <div>

@@ -3,7 +3,7 @@
     'name': 'Intern Inventory',
     'category': 'Inventory',
     'version': '1.0',
-    'author': "Nguyen Tien Dat",
+    'author': "Phan Quoc Viet",
     'sequence': "1",
     'description': """
     This module adds Inventory checks
@@ -18,6 +18,7 @@
         "wizard/wizard_product_view.xml",
         "views/inventory_line.xml",
     ],
+
     'demo': [],
     'installable': True,
     'application': True,

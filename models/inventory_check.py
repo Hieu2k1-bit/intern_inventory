@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
+import xlsxwriter
 
 from odoo import fields, models, api, _
 import base64
@@ -12,24 +13,25 @@ try:
 except ImportError:
     openpyxl = None
 
+
 class InventoryCheck(models.Model):
     _name = 'inventory.check'
-    _description = 'Phiếu kiểm kê kho'
+    _description = 'Inventory Check Sheet'
 
     name = fields.Text(string='Check Name')
     warehouse_id = fields.Many2one('stock.warehouse', string='Warehouse ID')
-    location_id =  fields.Many2one('stock.location', string='Warehouse Location ID')
+    location_id = fields.Many2one('stock.location', string='Warehouse Location ID')
     employeeCheck_id = fields.Many2one('res.users', string='Employee Check')
     company = fields.Many2one('res.company', string='Company')
     state = fields.Selection([('ready', 'Ready'), ('done', 'Done')], default='ready', string='State')
     create_datetime = fields.Datetime(string='Create Date', required=True, default=lambda self: fields.Datetime.now())
     check_date = fields.Date(string='Check Date', required=True, default=lambda self: fields.Date.today())
     line_ids = fields.One2many('inventory.line', 'check_id', string='Product Check Lines')
+    display_warehouse_name = fields.Char(string='Warehouse', compute='_compute_display_warehouse_name', store=True)
+    display_warehouse_location = fields.Char(string='Warehouse Location', compute='_compute_display_warehouse_location',
+                                             store=True)
 
-    display_warehouse_name = fields.Char(string ='Warehouse', compute='_compute_display_warehouse_name', store=True)
-    display_warehouse_location = fields.Char(string='Warehouse Location', compute='_compute_display_warehouse_location', store=True)
-
-    # @api.depends('warehouse_id')
+    @api.depends('warehouse_id')
     def _compute_display_warehouse_name(self):
         for rec in self:
             if rec.warehouse_id:
@@ -37,7 +39,7 @@ class InventoryCheck(models.Model):
             else:
                 rec.display_warehouse_name = "All Warehouse"
 
-    # @api.depends('location_id')
+    @api.depends('location_id')
     def _compute_display_warehouse_location(self):
         for rec in self:
             if rec.location_id:
@@ -53,16 +55,17 @@ class InventoryCheck(models.Model):
     #             rec.display_warehouse_location = "All Location"
 
     def action_complete(self):
-        self.ensure_one()   # Dam bao chi xu ly mot form mot luc
+        self.ensure_one()  # Dam bao chi xu ly mot form mot luc
         self.write({'state': 'done',
-                    'create_datetime': fields.Datetime.now()})   # Tu dong luu cac thay doi
+                    'create_datetime': fields.Datetime.now()})  # Tu dong luu cac thay doi
         return True
-        # self.env.ref('intern_inventory.action_inventory_check').read())[0] # Luu form va thoat ra man hinh view
+
 
     def action_apply_all(self):
         self.ensure_one()
         for line in self.line_ids:
             line.diff_quantity = abs((line.quantity or 0.0) - (line.inventory_quantity or 0.0))
+
 
     def action_open_product_selection(self):
         self.ensure_one()
@@ -84,47 +87,47 @@ class InventoryCheck(models.Model):
             file_content = base64.b64decode(file)
             data = BytesIO(file_content)
             workbook = load_workbook(filename=data)
-            if 'Phiếu kiểm kê' not in workbook.sheetnames:
+            if 'Inventory sheet' not in workbook.sheetnames:
                 return {
                     'status': 'error',
-                    'message': _("Sheet 'Phiếu kiểm kê' không tìm thấy trong file Excel")
+                    'message': _("Sheet 'Inventory sheet' not found in Excel file")
                 }
-            project_sheet = workbook['Phiếu kiểm kê']
-            # Extract headers and rows for 'Phiếu kiểm kê' sheet
+            project_sheet = workbook['Inventory sheet']
+            # Extract headers and rows for 'Inventory sheet' sheet
             project_header = [
                 cell.value.strip() if isinstance(cell.value, str) else cell.value
                 for cell in next(project_sheet.iter_rows(min_row=1, max_row=1))
-            ]  # lấy giá trị dòng đầu của cel (header)
-            project_rows = list(project_sheet.iter_rows(min_row=2, values_only=True))  # lấy giá trị trong ô thay vì cel
+            ]  # get the first row value of the cel (header)
+            project_rows = list(project_sheet.iter_rows(min_row=2, values_only=True))  #get value in cell instead of cel
             print('project_header', project_header)
             print('Number of project rows', project_rows)
 
-            # Required fields for 'Phiếu kiểm kê' sheet
-            required_project_field = ['Phiếu kiểm kê', 'Người kiểm kê', 'Sản phẩm']
+            # Required fields for 'Inventory sheet' sheet
+            required_project_field = ['Inventory sheet', 'employeeCheck', 'Production']
             for field in required_project_field:
                 if field not in project_header:
                     return {
                         'status': 'error',
-                        'message': _(f"Thiếu cột bắt buộc: '{field}' trong sheet'Phiếu kiểm kê'")
+                        'message': _(f"Thiếu cột bắt buộc: '{field}'Missing required column: in sheet'Inventory sheet'")
                     }
-            # Header mapping for 'Phiếu kiểm kê' sheet
+            # Header mapping for 'Inventory sheet' sheet
             project_header_mapping = {
-                'Phiếu kiểm kê': 'name',
-                'Ngày kiểm kê': 'check_date',
-                'Người kiểm kê': 'employeeCheck_id',
-                'Kho': 'warehouse_id',
-                'Vị trí': 'location_id',
-                'Sản phẩm': 'product.id',
-                'Số lô/serial': 'lot_id',
-                'ĐVT': 'unit_id',
-                'Số lượng hiện có': 'quantity',
-                'Số lượng đã đếm': 'inventory_quantity',
+                'Inventory sheet': 'name',
+                'Inventory date': 'check_date',
+                'employeeCheck': 'employeeCheck_id',
+                'warehouse': 'warehouse_id',
+                'location': 'location_id',
+                'product': 'product.id',
+                'Lot/serial number': 'lot_id',
+                'Unit': 'unit_id',
+                'quantity': 'quantity',
+                'Quantity counted': 'inventory_quantity',
             }
             # Collect all project codes from 'Phiếu kiểm kê' sheet
             project_codes = set()
             for row in project_rows:
                 row_data = {project_header[i]: row[i] for i in range(len(project_header)) if i < len(row)}
-                code = row_data.get('Phiếu kiểm kê')
+                code = row_data.get('Inventory sheet')
                 if code is not None:
                     project_codes.add(str(code).strip())  # convert to string and strip
                 else:
@@ -151,6 +154,72 @@ class InventoryCheck(models.Model):
             return {
                 "status": "error",
                 "message": f"Lỗi khi nhập dữ liệu: {str(e)}"
+            }
+
+    def action_export_excel(self):
+        for rec in self:
+            output = BytesIO()
+            workbook = xlsxwriter.Workbook(output, {'in_memory': True})
+            sheet = workbook.add_worksheet('Kiểm kê kho')
+
+            sheet.set_column(0, 0, 20)
+            sheet.set_column(1, 1, 15)
+            sheet.set_column(2, 2, 20)
+            sheet.set_column(3, 3, 15)
+            sheet.set_column(4, 4, 20)
+            sheet.set_column(5, 5, 25)
+            sheet.set_column(6, 6, 20)
+            sheet.set_column(7, 7, 10)
+            sheet.set_column(8, 8, 15)
+            sheet.set_column(9, 9, 15)
+
+            header_format = workbook.add_format({
+                'bold': True,
+                'font_color': 'red',
+                'align': 'center',
+                'valign': 'vcenter',
+                'bg_color': '#F9F9F9',
+                'border': 1
+            })
+
+            headers = [
+                'Phiếu kiểm kê', 'Ngày kiểm kê', 'Người kiểm kê',
+                'Kho', 'Vị trí', 'Sản phẩm', 'Số lô/serial',
+                'ĐVT', 'Số lượng hiện có', 'Số lượng đã đếm'
+            ]
+            for col_num, header in enumerate(headers):
+                sheet.write(0, col_num, header, header_format)
+
+            row = 1
+            for line in rec.line_ids:
+                sheet.write(row, 0, rec.name or '')
+                sheet.write(row, 1, str(rec.inventory_date or ''))
+                sheet.write(row, 2, rec.user_id.name or '')
+                sheet.write(row, 3, rec.warehouse_id.name if rec.warehouse_id else 'Tất cả kho')
+                sheet.write(row, 4, line.location_id.display_name or line.location_id.complete_name or '')
+                sheet.write(row, 5, line.product_id.name or '')
+                sheet.write(row, 6, line.lot_id.name if line.lot_id else '')
+                sheet.write(row, 7, line.uom_id.name if line.uom_id else '')
+                sheet.write(row, 8, line.quantity or 0)
+                sheet.write(row, 9, line.quantity_counted or 0)
+                row += 1
+
+            workbook.close()
+            output.seek(0)
+            data = output.read()
+
+            export_attachment = self.env['ir.attachment'].create({
+                'name': f'PhieuKiemKe_{rec.name}.xlsx',
+                'type': 'binary',
+                'datas': base64.b64encode(data),
+                'res_model': 'intern_inventory.check',
+                'res_id': rec.id,
+            })
+
+            return {
+                'type': 'ir.actions.act_url',
+                'url': f'/web/content/{export_attachment.id}?download=true',
+                'target': 'self',
             }
 
     def _prepare_project_data(self, row_data, mapping):
