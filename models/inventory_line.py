@@ -26,12 +26,12 @@ class InventoryLine(models.Model):
     @api.depends('warehouse_id')
     def _compute_warehouse_display_name(self):
         for record in self:
-            record.warehouse_display_name = record.warehouse_id.name if record.warehouse_id else "All Warehouses"
+            record.warehouse_display_name = record.warehouse_id.name if record.warehouse_id else _("All warehouses")
 
     @api.depends('location_id')
     def _compute_location_display_name(self):
         for record in self:
-            record.location_display_name = record.location_id.name if record.location_id else "All Locations"
+            record.location_display_name = record.location_id.name if record.location_id else _("All locations")
 
     def action_apply(self):
         for line in self:
@@ -40,7 +40,6 @@ class InventoryLine(models.Model):
 
     #Việt
     def action_history(self):
-        self.ensure_one()
         action = {
             'name': _('History'),
             'view_mode': 'list,form',
@@ -56,6 +55,5 @@ class InventoryLine(models.Model):
         return action
 
     def action_delete(self):
-        self.ensure_one()
         self.unlink()  # Xóa dòng kiểm kê hiện tại
         return {'type': 'ir.actions.client', 'tag': 'reload'}

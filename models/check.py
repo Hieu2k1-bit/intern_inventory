@@ -60,13 +60,13 @@ class InternInventory(models.Model):
             else:
                 rec.state_display_name = "Done"
 
-    @api.depends('warehouse_ids.name')  # Cập nhật dependencies
+    @api.depends('warehouse_ids.name')
     def _compute_warehouse_display_name(self):
         for record in self:
             if record.warehouse_ids:
                 record.warehouse_display_name = ", ".join(record.warehouse_ids.mapped('name'))
             else:
-                record.warehouse_display_name = "All Warehouses"
+                record.warehouse_display_name = _("All warehouses")
 
     @api.depends('location_ids.name')
     def _compute_location_display_name(self):
@@ -74,7 +74,7 @@ class InternInventory(models.Model):
             if record.location_ids:
                 record.location_display_name = ", ".join(record.location_ids.mapped('name'))
             else:
-                record.location_display_name = "All Locations"
+                record.location_display_name = _("All locations")
 
     @api.onchange('warehouse_ids')
     def _onchange_warehouses_ids(self):
@@ -115,20 +115,14 @@ class InternInventory(models.Model):
                 raise ValidationError(_('You have not selected warehouse'))
 
     def action_open_product_selection(self):
-        # Xóa các dòng wizard cũ liên quan đến phiếu kiểm kê này
-        self.env['product.selection.line.wizard'].search([('check_id', '=', self.id)]).unlink()
+        self.env['product.selection.line.wizard'].search([('check_id', '=', self.id)]).unlink()     # Delete old wizard lines
+        quant_domain = [('quantity', '>', 0)]       # Initialize domain quants
+        valid_location_ids = []     # ID list of valid location
 
-        # Khởi tạo domain quants
-        quant_domain = [('quantity', '>', 0)]
-
-        # Lấy danh sách ID các vị trí hợp lệ
-        valid_location_ids = []
-
-        if self.location_ids:  # Nếu có locations được chọn (Many2Many)
-            # Lấy các ID của các vị trí đã chọn trực tiếp
-            valid_location_ids = self.location_ids.ids
-        elif self.warehouse_ids:  # Nếu không có vị trí cụ thể được chọn, nhưng có KHO được chọn (Many2Many)
-            # Lấy tất cả các internal location thuộc các warehouse đã chọn
+        if self.location_ids:
+            valid_location_ids = self.location_ids.ids      # ids: method get list id
+        elif self.warehouse_ids:  # One or more warehouse but 0 location
+            # Get all internal location of selected warehouse
             warehouse_view_locations = self.warehouse_ids.mapped('view_location_id')
             all_locations_in_selected_warehouses = self.env['stock.location'].search([
                 ('location_id', 'child_of', warehouse_view_locations.ids),
@@ -136,19 +130,14 @@ class InternInventory(models.Model):
             ])
             valid_location_ids = all_locations_in_selected_warehouses.ids
         else:
-            # Nếu không có cả kho và vị trí nào được chọn trên phiếu kiểm kê,
+            # 0 warehouse, 0 location
             all_internal_locations = self.env['stock.location'].search([('usage', '=', 'internal')])
             valid_location_ids = all_internal_locations.ids
-
         quant_domain.append(('location_id', 'in', valid_location_ids))
-
-
-        # Truy vấn các quants phù hợp
+        # Quere the suitable quants
         quants = self.env['stock.quant'].search(quant_domain)
-
         for quant in quants:
-            # Đảm bảo chỉ thêm các quant có số lượng > 0 và chưa tồn tại trong line_ids
-            # Kiểm tra trùng lặp để tránh thêm một sản phẩm/lot/location vào wizard nhiều lần
+            # Check for duplicate and quant > 0
             existing_line = self.env['product.selection.line.wizard'].search([
                 ('check_id', '=', self.id),
                 ('product_id', '=', quant.product_id.id),
@@ -263,9 +252,9 @@ class InternInventory(models.Model):
     # Đạt
     def action_complete(self):
         self.write({'state': 'done',
-                    'create_date': fields.Datetime.now()})  # Tu dong luu cac thay doi
-        return True
+                    'create_date': fields.Datetime.now()})  # Autosave save changes of datetime
         # self.env.ref('intern_inventory.action_inventory_check').read())[0] # Save and move to list view
+        return True
 
     def action_apply_all(self):
         for line in self.line_ids:
@@ -281,6 +270,7 @@ class InternInventory(models.Model):
         return False
 
     def import_data(self, file):
+        self.ensure_one()
         if self.location_ids and not self.warehouse_ids:
             return {
                 'status': 'error',
@@ -358,8 +348,7 @@ class InternInventory(models.Model):
                 if warehouse_name_from_excel:
                     warehouse = self.env['stock.warehouse'].search([('name', '=', warehouse_name_from_excel)], limit=1)
                     if not warehouse:
-                        return {'status': 'error', 'message': f"No warehouse found: '{warehouse_name_from_excel}'."}
-
+                        warehouse = False
                 # --- Location ---
                 location = False
                 location_name_from_excel = row_data.get('Vị trí')
@@ -370,9 +359,19 @@ class InternInventory(models.Model):
                     if not location_name_from_excel or location_name_from_excel not in self.location_ids.mapped('name'):
                         continue
                 else:
-                    # If the user does not select any location, all locations are considered selected.
-                    pass  # no further testing required
-
+                    if not location_name_from_excel and warehouse:
+                        # Nếu người dùng không chọn sẵn vị trí, và vị trí trong Excel bị trống nhưng có kho
+                        # → Lấy vị trí nội bộ đầu tiên của kho làm mặc định
+                        location = self.env['stock.location'].search([
+                            ('usage', '=', 'internal'),
+                            ('location_id', 'child_of', warehouse.view_location_id.id)
+                        ], limit=1)
+                        if not location:
+                            return {
+                                'status': 'error',
+                                'message': f"No internal location found under warehouse '{warehouse.name}'."
+                            }
+                        location_name_from_excel = location.name
                 location_provided_in_excel = False
                 if location_name_from_excel:
                     location_provided_in_excel = True
@@ -408,11 +407,6 @@ class InternInventory(models.Model):
                 if not product:
                     return {'status': 'error', 'message': f"Product code not found: {product_name}"}
 
-                if not warehouse:
-                    return {
-                        'status': 'error',
-                        'message': f"Product '{product.name}' not in stock '{warehouse_name_from_excel}' or invalid warehouse name."
-                    }
                 if not self.warehouse_ids and warehouse:
                     internal_locations = self.env['stock.location'].search([
                         ('usage', '=', 'internal'),
@@ -465,8 +459,10 @@ class InternInventory(models.Model):
                         quant_domain.append(('location_id', 'in', all_locations.ids))
                     else:
                         return {'status': 'error',
-                                'message': f"No internal locations found in the warehouse: {warehouse.name}."}
-
+                                'message': f"No internal locations found in the selected warehouse(s)."}
+                else:
+                    internal_locations = self.env['stock.location'].search([('usage', '=', 'internal')])
+                    quant_domain.append(('location_id', 'in', internal_locations.ids))
                 quant = self.env['stock.quant'].search(quant_domain, limit=1)
                 if not quant:
                     error_message = f"Sản phẩm '{product.name}'"
@@ -479,7 +475,10 @@ class InternInventory(models.Model):
                     else:
                         error_message += f" does not exist in any location."
                     return {'status': 'error', 'message': error_message}
-
+                if not warehouse and quant.location_id:
+                    warehouse = self.get_warehouse_from_location(quant.location_id)
+                if not location and quant.location_id:
+                    location = quant.location_id
                 # Thêm dòng vào line_vals
                 line_vals.append((0, 0, {
                     'product_id': product.id,
@@ -489,6 +488,7 @@ class InternInventory(models.Model):
                     'quantity': quant.quantity if quant else 0,
                     'quantity_counted': row_data.get('Số lượng đã đếm') or 0,
                     'location_id': location.id if location else False,
+                    'warehouse_id': warehouse.id if warehouse else False,
                 }))
                 valid_line_count += 1
             if valid_line_count == 0:
@@ -510,7 +510,7 @@ class InternInventory(models.Model):
                 return main_data
             if not main_data.get('name'):
                 main_data['name'] = self.name
-            # Xóa kho và vị trí khỏi dữ liệu để không tự động ghi
+            # # Xóa kho và vị trí khỏi dữ liệu để không tự động ghi
             main_data.pop('warehouse_ids', None)
             main_data.pop('location_ids', None)
             # Viết dữ liệu phiếu kiểm kê

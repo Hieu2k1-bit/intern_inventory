@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 16.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-06-22 15:33+0000\n"
-"PO-Revision-Date: 2025-06-22 15:33+0000\n"
+"POT-Creation-Date: 2025-06-22 18:52+0000\n"
+"PO-Revision-Date: 2025-06-22 18:52+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
@@ -19,6 +19,20 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:intern_inventory.view_intern_inventory_check_form
 msgid "Add products"
 msgstr "Thêm nhiều sản phẩm"
+
+#. module: intern_inventory
+#. odoo-python
+#: code:addons/intern_inventory/models/check.py:0
+#, python-format
+msgid "All locations"
+msgstr "Tất cả vị trí"
+
+#. module: intern_inventory
+#. odoo-python
+#: code:addons/intern_inventory/models/check.py:0
+#, python-format
+msgid "All warehouses"
+msgstr "Tất cả kho"
 
 #. module: intern_inventory
 #: model_terms:ir.ui.view,arch_db:intern_inventory.view_intern_inventory_check_form
@@ -77,7 +91,7 @@ msgstr "Tạo phiếu kiểm kê"
 #. module: intern_inventory
 #: model_terms:ir.ui.view,arch_db:intern_inventory.my_module_view_move_line_tree_detailed_inherit
 msgid "Created By"
-msgstr ""
+msgstr "Người tạo"
 
 #. module: intern_inventory
 #: model:ir.model.fields,field_description:intern_inventory.field_intern_inventory_check__create_uid
@@ -188,7 +202,7 @@ msgstr "Nhập dữ liệu"
 #: code:addons/intern_inventory/models/check.py:0
 #, python-format
 msgid "Import is only allowed when the status is 'Ready'."
-msgstr ""
+msgstr "Chỉ có thể tải tệp lên khi phiếu ở trạng thái Sẵn sàng"
 
 #. module: intern_inventory
 #: model:ir.model.fields,field_description:intern_inventory.field_product_selection_line_wizard__internal_reference
@@ -201,16 +215,12 @@ msgid "Inventory"
 msgstr "Hàng tồn kho"
 
 #. module: intern_inventory
-#: model:ir.model,name:intern_inventory.model_inventory_line
-msgid "Inventory check line"
-msgstr "Dòng kiểm kê"
-
-#. module: intern_inventory
 #: model:ir.model,name:intern_inventory.model_intern_inventory_check
 msgid "Inventory Check Sheet"
 msgstr "Phiếu kiểm kê"
 
 #. module: intern_inventory
+#: model:ir.model,name:intern_inventory.model_inventory_line
 #: model:ir.model.fields,field_description:intern_inventory.field_inventory_line__check_id
 msgid "Inventory check line"
 msgstr "Dòng kiểm kê"
@@ -280,7 +290,7 @@ msgstr "Tên vị trí"
 #. module: intern_inventory
 #: model:ir.model.fields,field_description:intern_inventory.field_intern_inventory_check__location_display_name
 msgid "Locations"
-msgstr ""
+msgstr "Vị trí"
 
 #. module: intern_inventory
 #: model:ir.model.fields,field_description:intern_inventory.field_intern_inventory_check__lot_id
@@ -315,7 +325,7 @@ msgstr "Sản phẩm"
 #. module: intern_inventory
 #: model:ir.model.fields,field_description:intern_inventory.field_intern_inventory_check__line_ids
 msgid "Product Check Lines"
-msgstr ""
+msgstr "Dòng phiếu kiểm kê"
 
 #. module: intern_inventory
 #: model_terms:ir.ui.view,arch_db:intern_inventory.view_intern_inventory_check_form
@@ -346,14 +356,14 @@ msgstr "Sẵn sàng"
 #. module: intern_inventory
 #: model:ir.model.fields,field_description:intern_inventory.field_product_selection_line_wizard__is_selected
 msgid "Select"
-msgstr ""
+msgstr "Lựa chọn"
 
 #. module: intern_inventory
 #. odoo-python
 #: code:addons/intern_inventory/models/check.py:0
 #, python-format
 msgid "Sheet 'Phiếu kiểm kê' not found in Excel file"
-msgstr "Sheet 'Phiếu kiểm kê' không tìm thấy trong file Excel"
+msgstr "Không tìm thấy sheet 'Phiếu kiểm kê' trong file Excel"
 
 #. module: intern_inventory
 #: model:ir.model.fields,field_description:intern_inventory.field_intern_inventory_check__state
@@ -411,14 +421,7 @@ msgstr "Kho"
 #: code:addons/intern_inventory/models/check.py:0
 #, python-format
 msgid "You have not selected warehouse"
-msgstr ""
-
-#. module: intern_inventory
-#. odoo-python
-#: code:addons/intern_inventory/models/check.py:0
-#, python-format
-msgid "You must select the warehouse once you have selected the location!"
-msgstr ""
+msgstr "Bạn chưa lựa chọn kho"
 
 #. module: intern_inventory
 #: model:ir.model,name:intern_inventory.model_product_selection_line_wizard

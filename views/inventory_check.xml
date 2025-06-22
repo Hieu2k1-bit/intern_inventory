@@ -29,11 +29,12 @@
                             <field name="user_id" attrs="{'readonly': [('state', '=', 'done')]}"/>
                         </group>
                     </group>
-                    <button name="action_open_product_selection" type="object" string="Add products" class="btn-primary"/>
+                    <button name="action_open_product_selection" type="object" string="Add products"
+                            class="btn-primary" attrs="{'invisible': [('state', '=', 'done')]}"/>
                     <notebook>
                         <page string="Product Information">
                             <field name="line_ids">
-                                <tree>
+                                <tree editable="bottom">
                                     <field name="warehouse_display_name"/>
                                     <field name="location_display_name"/>
                                     <field name="product_id" readonly="1"/>
@@ -79,5 +80,5 @@
               name="Create inventory check sheet"
               parent="stock.menu_stock_warehouse_mgmt"
               action="intern_inventory_check_action"
-              sequence="25"/>
+              sequence="1"/>
 </odoo>
