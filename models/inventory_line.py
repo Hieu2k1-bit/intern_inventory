@@ -5,9 +5,9 @@ from odoo import fields, models, api, _
 
 class InventoryLine(models.Model):
     _name = 'inventory.line'
-    _description = 'Inventory Check Line'
+    _description = 'Inventory check line'
 
-    check_id = fields.Many2one('intern_inventory.check', string='Inventory Check line', ondelete='cascade')
+    check_id = fields.Many2one('intern_inventory.check', string='Inventory check line', ondelete='cascade')
     warehouse_id = fields.Many2one("stock.warehouse", string='Warehouse', ondelete='cascade')
     product_id = fields.Many2one('product.product', string='Product', ondelete='cascade')
     lot_id = fields.Many2one('stock.lot', string='Lot/Serial Number')
@@ -34,7 +34,6 @@ class InventoryLine(models.Model):
             record.location_display_name = record.location_id.name if record.location_id else "All Locations"
 
     def action_apply(self):
-        self.ensure_one()
         for line in self:
             line.diff_quantity = abs((line.quantity or 0.0) - (line.quantity_counted or 0.0))
 
@@ -59,3 +58,4 @@ class InventoryLine(models.Model):
     def action_delete(self):
         self.ensure_one()
         self.unlink()  # Xóa dòng kiểm kê hiện tại
+        return {'type': 'ir.actions.client', 'tag': 'reload'}
