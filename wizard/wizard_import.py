@@ -18,7 +18,7 @@ class ProjectWizardImport(models.TransientModel):
 
         file_data = self.file[0].datas  # Giả sử self.file là binary file field
 
-        # Lấy active_id từ context để xác định phiếu kiểm kê đang thao tác
+        # # Lấy active_id từ context để xác định phiếu kiểm kê đang thao tác
         active_id = self.env.context.get('active_id')
         if not active_id:
             raise ValidationError(_("Unable to locate inventory sheet for data entry."))
