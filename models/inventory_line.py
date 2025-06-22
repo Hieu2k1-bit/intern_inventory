@@ -1,7 +1,7 @@
 from email.policy import default
 
 from odoo import fields, models, api, _
-
+from odoo.exceptions import UserError
 
 class InventoryLine(models.Model):
     _name = 'inventory.line'
@@ -32,6 +32,7 @@ class InventoryLine(models.Model):
             line.diff_quantity = abs((line.quantity or 0.0) - (line.quantity_counted or 0.0))
 
     # Việt
+
     def action_history(self):
         self.ensure_one()
         action = {
@@ -40,18 +41,30 @@ class InventoryLine(models.Model):
             'res_model': 'stock.move.line',
             'views': [(self.env.ref('stock.view_move_line_tree').id, 'list'), (False, 'form')],
             'type': 'ir.actions.act_window',
-            'context': {
-                'search_default_inventory': 1,
-                'search_default_done': 1,
-                'search_default_product_id': self.product_id.id,
-            }
+            'domain': [
+                ('product_id', '=', self.product_id.id),
+                ('state', '=', 'done'),]
+
         }
         return action
 
     def action_delete(self):
         self.ensure_one()
-        self.unlink()  # Xóa dòng kiểm kê hiện tại
-
+        product_name = self.product_id.display_name
+        if self.diff_quantity == 0:
+            raise UserError(
+                _("Unable to delete unapplied line checklist . Please apply or modify before deleting.."))
+        self.unlink()
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'message': _("Dòng kiểm kê cho sản phẩm '%s' đã được xóa thành công." % product_name),
+                'type': 'success',
+                'sticky': False,
+                'next': {'type': 'ir.actions.act_window_close'},
+            }
+        }
     @api.depends('product_id', 'location_id', 'lot_id')
     def _compute_quantities(self):
         for line in self:

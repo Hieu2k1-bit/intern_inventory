@@ -28,7 +28,7 @@
         'wizard/wizard_import_view.xml',
         'wizard/wizard_product_view.xml',
         'views/inventory_check.xml',
-
+        'views/inventory_line.xml',
     ],
     # only loaded in demonstration mode
     'demo': [
