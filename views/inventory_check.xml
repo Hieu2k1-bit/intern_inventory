@@ -41,14 +41,14 @@
                                     <field name="lot_id" readonly="1"/>
                                     <field name="uom_id" readonly="1"/>
                                     <field name="quantity" readonly="1"/>
-                                    <field name="quantity_counted"/>
+                                    <field name="quantity_counted" attrs="{'readonly': [('parent.state', '=', 'done')]}"/>
                                     <field name="diff_quantity" readonly="1"/>
                                     <button name="action_history" string="History" type="object" class="fa fa-history"
-                                            attrs="{'invisible': [('id', '=', False)]}"/>
+                                            attrs="{'invisible': ['|', ('parent.state', '=', 'done'), ('id', '=', False)]}"/>
                                     <button name="action_apply" string="Apply" type="object" class="fa fa-floppy-o"
-                                            attrs="{'invisible': [('id', '=', False)]}"/>
+                                            attrs="{'invisible': ['|', ('parent.state', '=', 'done'), ('id', '=', False)]}"/>
                                     <button name="action_delete" string="Delete" type="object" class="fa fa-times"
-                                            attrs="{'invisible': [('id', '=', False)]}"/>
+                                            attrs="{'invisible': ['|', ('parent.state', '=', 'done'), ('id', '=', False)]}"/>
                                 </tree>
                             </field>
                         </page>
