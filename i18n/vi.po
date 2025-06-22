@@ -1,0 +1,417 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* intern_inventory
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 16.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-06-22 16:15+0000\n"
+"PO-Revision-Date: 2025-06-22 16:15+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
+
+#. module: intern_inventory
+#: model:ir.model.fields,help:intern_inventory.field_inventory_line__location_usage
+msgid ""
+"* Vendor Location: Virtual location representing the source location for products coming from your vendors\n"
+"* View: Virtual location used to create a hierarchical structures for your warehouse, aggregating its child locations ; can't directly contain products\n"
+"* Internal Location: Physical locations inside your own warehouses,\n"
+"* Customer Location: Virtual location representing the destination location for products sent to your customers\n"
+"* Inventory Loss: Virtual location serving as counterpart for inventory operations used to correct stock levels (Physical inventories)\n"
+"* Production: Virtual counterpart location for production operations: this location consumes the components and produces finished products\n"
+"* Transit Location: Counterpart location that should be used in inter-company or inter-warehouses operations"
+msgstr ""
+
+#. module: intern_inventory
+#: model_terms:ir.ui.view,arch_db:intern_inventory.inventory_check_form_view
+#: model_terms:ir.ui.view,arch_db:intern_inventory.view_product_selection_wizard_form
+msgid "Add Products"
+msgstr "Thêm nhiều sản phẩm"
+
+#. module: intern_inventory
+#: model_terms:ir.ui.view,arch_db:intern_inventory.inventory_check_form_view
+msgid "Apply"
+msgstr "Áp dụng"
+
+#. module: intern_inventory
+#: model_terms:ir.ui.view,arch_db:intern_inventory.inventory_check_form_view
+msgid "Apply All"
+msgstr "Áp dụng cho tất cả"
+
+#. module: intern_inventory
+#: model_terms:ir.ui.view,arch_db:intern_inventory.project_wizard_import_form
+#: model_terms:ir.ui.view,arch_db:intern_inventory.view_product_selection_wizard_form
+msgid "Cancel"
+msgstr "Hủy bỏ"
+
+#. module: intern_inventory
+#: model:ir.model.fields,field_description:intern_inventory.field_inventory_check__check_date
+msgid "Check Date"
+msgstr "Ngày kiểm kê"
+
+#. module: intern_inventory
+#: model:ir.model.fields,field_description:intern_inventory.field_inventory_check__name
+msgid "Check Name"
+msgstr "Tên kiểm kê"
+
+#. module: intern_inventory
+#: model:ir.model.fields,field_description:intern_inventory.field_inventory_check__company
+msgid "Company"
+msgstr "Công ty"
+
+#. module: intern_inventory
+#: model_terms:ir.ui.view,arch_db:intern_inventory.inventory_check_form_view
+msgid "Completed"
+msgstr "Hoàn tất"
+
+#. module: intern_inventory
+#: model:ir.model.fields,field_description:intern_inventory.field_inventory_line__inventory_quantity
+msgid "Counted Quantity"
+msgstr "Số lượng hiện có"
+
+#. module: intern_inventory
+#: model:ir.model.fields,field_description:intern_inventory.field_inventory_check__create_datetime
+msgid "Create Date"
+msgstr "Ngày tạo"
+
+#. module: intern_inventory
+#: model_terms:ir.actions.act_window,help:intern_inventory.action_inventory_check
+msgid "Create a new Inventory Check for more!"
+msgstr "Tạo Kiểm kê hàng tồn kho mới để biết thêm!"
+
+#. module: intern_inventory
+#: model_terms:ir.ui.view,arch_db:intern_inventory.intern_inventory_view_move_line_tree_detailed_inherit
+msgid "Created By"
+msgstr "Tạo bởi"
+
+#. module: intern_inventory
+#: model:ir.model.fields,field_description:intern_inventory.field_inventory_check__create_uid
+#: model:ir.model.fields,field_description:intern_inventory.field_inventory_line__create_uid
+#: model:ir.model.fields,field_description:intern_inventory.field_product_selection_wizard__create_uid
+#: model:ir.model.fields,field_description:intern_inventory.field_project_wizard_import__create_uid
+msgid "Created by"
+msgstr "Tạo bởi"
+
+#. module: intern_inventory
+#: model:ir.model.fields,field_description:intern_inventory.field_inventory_check__create_date
+#: model:ir.model.fields,field_description:intern_inventory.field_inventory_line__create_date
+#: model:ir.model.fields,field_description:intern_inventory.field_product_selection_wizard__create_date
+#: model:ir.model.fields,field_description:intern_inventory.field_project_wizard_import__create_date
+msgid "Created on"
+msgstr "Tạo vào"
+
+#. module: intern_inventory
+#: model_terms:ir.ui.view,arch_db:intern_inventory.inventory_check_form_view
+msgid "Delete"
+msgstr "Xóa"
+
+#. module: intern_inventory
+#: model:ir.model.fields,field_description:intern_inventory.field_inventory_line__diff_quantity
+msgid "Difference"
+msgstr "Chênh lệch"
+
+#. module: intern_inventory
+#: model:ir.model.fields,field_description:intern_inventory.field_inventory_check__display_name
+#: model:ir.model.fields,field_description:intern_inventory.field_inventory_line__display_name
+#: model:ir.model.fields,field_description:intern_inventory.field_product_selection_wizard__display_name
+#: model:ir.model.fields,field_description:intern_inventory.field_project_wizard_import__display_name
+msgid "Display Name"
+msgstr "Tên hiển thị"
+
+#. module: intern_inventory
+#: model:ir.model.fields.selection,name:intern_inventory.selection__inventory_check__state__done
+msgid "Done"
+msgstr "Hoàn thành"
+
+#. module: intern_inventory
+#: model_terms:ir.ui.view,arch_db:intern_inventory.my_module_view_stock_move_line_kanban_inherit
+msgid "Done by"
+msgstr "Hoàn thành bởi"
+
+#. module: intern_inventory
+#. odoo-python
+#: code:addons/intern_inventory/models/inventory_line.py:0
+#, python-format
+msgid "Check product line '%s' has been deleted successfully"
+msgstr "Dòng kiểm kê cho sản phẩm '%s' đã được xóa thành công!"
+
+#. module: intern_inventory
+#: model:ir.model.fields,field_description:intern_inventory.field_inventory_check__employeeCheck_id
+msgid "Employee Check"
+msgstr "Người kiểm kê"
+
+#. module: intern_inventory
+#: model:ir.model.fields,field_description:intern_inventory.field_project_wizard_import__file
+msgid "File Import"
+msgstr "Nhập tệp"
+
+#. module: intern_inventory
+#: model:ir.model.fields,field_description:intern_inventory.field_project_wizard_import__file_name
+msgid "File Name"
+msgstr "Tên tệp"
+
+#. module: intern_inventory
+#. odoo-python
+#: code:addons/intern_inventory/models/inventory_line.py:0
+#: model_terms:ir.ui.view,arch_db:intern_inventory.inventory_check_form_view
+#, python-format
+msgid "History"
+msgstr "Lịch sử"
+
+#. module: intern_inventory
+#: model:ir.model.fields,field_description:intern_inventory.field_inventory_check__id
+#: model:ir.model.fields,field_description:intern_inventory.field_inventory_line__id
+#: model:ir.model.fields,field_description:intern_inventory.field_product_selection_wizard__id
+#: model:ir.model.fields,field_description:intern_inventory.field_project_wizard_import__id
+msgid "ID"
+msgstr "Mã"
+
+#. module: intern_inventory
+#: model_terms:ir.ui.view,arch_db:intern_inventory.project_wizard_import_form
+msgid "Import"
+msgstr "Nhập"
+
+#. module: intern_inventory
+#: model_terms:ir.ui.view,arch_db:intern_inventory.inventory_check_form_view
+msgid "Import data"
+msgstr "Nhập dữ liệu"
+
+#. module: intern_inventory
+#: model:ir.actions.act_window,name:intern_inventory.project_wizard_import_action
+#: model_terms:ir.ui.view,arch_db:intern_inventory.project_wizard_import_form
+msgid "Import data"
+msgstr "Import dữ liệu"
+
+#. module: intern_inventory
+#: model:ir.model.fields,field_description:intern_inventory.field_product_selection_wizard__check_id
+msgid "Inventory Check"
+msgstr "Phiếu Kiêm kê"
+
+#. module: intern_inventory
+#. odoo-python
+#: code:addons/intern_inventory/models/inventory_line.py:0
+#: model:ir.model,name:intern_inventory.model_inventory_line
+#, python-format
+msgid "Inventory Check Line"
+msgstr "Dòng kiểm kê"
+
+#. module: intern_inventory
+#: model:ir.model,name:intern_inventory.model_inventory_check
+msgid "Inventory Check Sheet"
+msgstr "Phiếu kiểm kê"
+
+#. module: intern_inventory
+#: model:ir.model.fields,field_description:intern_inventory.field_inventory_line__check_id
+msgid "Inventory Check line"
+msgstr "Dòng kiểm kê"
+
+#. module: intern_inventory
+#: model:ir.ui.menu,name:intern_inventory.inventory_menu
+msgid "Inventory Sheet"
+msgstr "Phiếu kiểm kê"
+
+#. module: intern_inventory
+#: model:ir.actions.act_window,name:intern_inventory.action_inventory_check
+msgid "Inventory sheet"
+msgstr "Phiếu kiểm kê"
+
+#. module: intern_inventory
+#: model_terms:ir.ui.view,arch_db:intern_inventory.inventory_check_list_view
+msgid "Inventory sheet list"
+msgstr "Danh sách phiếu kiểm kê"
+
+#. module: intern_inventory
+#: model:ir.model.fields,field_description:intern_inventory.field_inventory_check____last_update
+#: model:ir.model.fields,field_description:intern_inventory.field_inventory_line____last_update
+#: model:ir.model.fields,field_description:intern_inventory.field_product_selection_wizard____last_update
+#: model:ir.model.fields,field_description:intern_inventory.field_project_wizard_import____last_update
+msgid "Last Modified on"
+msgstr "Sửa đổi lần cuối vào"
+
+#. module: intern_inventory
+#: model:ir.model.fields,field_description:intern_inventory.field_inventory_check__write_uid
+#: model:ir.model.fields,field_description:intern_inventory.field_inventory_line__write_uid
+#: model:ir.model.fields,field_description:intern_inventory.field_product_selection_wizard__write_uid
+#: model:ir.model.fields,field_description:intern_inventory.field_project_wizard_import__write_uid
+msgid "Last Updated by"
+msgstr "Cập nhật lần cuối bởi"
+
+#. module: intern_inventory
+#: model:ir.model.fields,field_description:intern_inventory.field_inventory_check__write_date
+#: model:ir.model.fields,field_description:intern_inventory.field_inventory_line__write_date
+#: model:ir.model.fields,field_description:intern_inventory.field_product_selection_wizard__write_date
+#: model:ir.model.fields,field_description:intern_inventory.field_project_wizard_import__write_date
+msgid "Last Updated on"
+msgstr "Cập nhật lần cuối vào"
+
+#. module: intern_inventory
+#. odoo-python
+#: code:addons/intern_inventory/models/inventory_check.py:0
+#, python-format
+msgid "Library openpyxl is not installed."
+msgstr "Thư viện openpyxl chưa được cài đặt"
+
+#. module: intern_inventory
+#: model:ir.model.fields,field_description:intern_inventory.field_inventory_line__location_id
+msgid "Location"
+msgstr "Vị trí"
+
+#. module: intern_inventory
+#: model:ir.model.fields,field_description:intern_inventory.field_inventory_line__lot_id
+msgid "Lot/Serial Number"
+msgstr "Số lô/Số sê-ri"
+
+#. module: intern_inventory
+#. odoo-python
+#: code:addons/intern_inventory/wizard/wizard_import_kiemke.py:0
+#, python-format
+msgid "Error"
+msgstr "Lỗi"
+
+#. module: intern_inventory
+#: model_terms:ir.ui.view,arch_db:intern_inventory.intern_inventory_stock_move_line_view_search_inherit
+msgid "Made by user"
+msgstr "Được thực hiện bởi người dùng"
+
+#. module: intern_inventory
+#: model_terms:ir.ui.view,arch_db:intern_inventory.intern_inventory_stock_move_line_view_search_inherit
+msgid "My custom filters"
+msgstr "Bộ lọc tùy chỉnh của tôi"
+
+#. module: intern_inventory
+#. odoo-python
+#: code:addons/intern_inventory/wizard/wizard_import_kiemke.py:0
+#, python-format
+msgid "Please upload a file for data import."
+msgstr "Vui lòng tải lên tệp để nhập dữ liệu"
+
+#. module: intern_inventory
+#: model:ir.model.fields,field_description:intern_inventory.field_inventory_line__product_id
+#: model:ir.model.fields,field_description:intern_inventory.field_product_selection_wizard__line_ids
+msgid "Product"
+msgstr "Sản phẩm"
+
+#. module: intern_inventory
+#: model:ir.model.fields,field_description:intern_inventory.field_inventory_check__line_ids
+msgid "Product Check Lines"
+msgstr "Dòng kiểm kê sản phẩm"
+
+#. module: intern_inventory
+#: model_terms:ir.ui.view,arch_db:intern_inventory.inventory_check_form_view
+msgid "Product Information"
+msgstr "Thông tin sản phẩm"
+
+#. module: intern_inventory
+#: model:ir.model.fields,field_description:intern_inventory.field_inventory_line__quantity
+msgid "Quantity Available"
+msgstr "Số lượng có sẵn"
+
+#. module: intern_inventory
+#: model:ir.model.fields.selection,name:intern_inventory.selection__inventory_check__state__ready
+msgid "Ready"
+msgstr "Sẵn sàng"
+
+#. module: intern_inventory
+#: model_terms:ir.ui.view,arch_db:intern_inventory.intern_inventory_view_move_line_mobile_form_inherit
+msgid "Related Partners (Mobile)"
+msgstr "Đối tác liên quan (Di động)"
+
+#. module: intern_inventory
+#: model_terms:ir.ui.view,arch_db:intern_inventory.view_product_selection_wizard_form
+msgid "Select product"
+msgstr "Chọn sản phẩm"
+
+#. module: intern_inventory
+#. odoo-python
+#: code:addons/intern_inventory/models/inventory_check.py:0
+#, python-format
+msgid "Sheet 'Inventory sheet' not found in Excel file"
+msgstr "Không tìm thấy bảng 'Bảng tồn kho' trong tệp Excel"
+
+#. module: intern_inventory
+#: model:ir.model.fields,field_description:intern_inventory.field_inventory_check__state
+msgid "State"
+msgstr "Trạng thái"
+
+#. module: intern_inventory
+#. odoo-python
+#: code:addons/intern_inventory/wizard/wizard_import_kiemke.py:0
+#, python-format
+msgid "Success"
+msgstr "Thành công"
+
+#. module: intern_inventory
+#. odoo-python
+#: code:addons/intern_inventory/wizard/wizard_import_kiemke.py:0
+#, python-format
+msgid "Successfully imported file"
+msgstr "Đã nhập tệp thành công"
+
+#. module: intern_inventory
+#. odoo-python
+#: code:addons/intern_inventory/models/inventory_line.py:0
+#, python-format
+msgid ""
+"Unable to delete unapplied line checklist . Please apply or modify before "
+"deleting.."
+msgstr "Không thể xóa danh sách dòng kiểm kê chưa áp dụng. Vui lòng áp dụng hoặc sửa đổi trước khi "
+"xóa"
+
+#. module: intern_inventory
+#: model:ir.model.fields,field_description:intern_inventory.field_inventory_line__unit_id
+msgid "Unit"
+msgstr "Đơn vị tính"
+
+#. module: intern_inventory
+#: model:ir.model.fields,field_description:intern_inventory.field_inventory_check__display_warehouse_name
+msgid "Warehouse"
+msgstr "Kho"
+
+#. module: intern_inventory
+#: model:ir.model.fields,field_description:intern_inventory.field_inventory_check__warehouse_id
+msgid "Warehouse ID"
+msgstr "Mã kho"
+
+#. module: intern_inventory
+#: model:ir.model.fields,field_description:intern_inventory.field_inventory_check__display_warehouse_location
+msgid "Warehouse Location"
+msgstr "Vị trí kho"
+
+#. module: intern_inventory
+#: model:ir.model.fields,field_description:intern_inventory.field_inventory_check__location_id
+msgid "Warehouse Location ID"
+msgstr "Mã vị trí kho"
+
+#. module: intern_inventory
+#: model:ir.model,name:intern_inventory.model_product_selection_wizard
+msgid "Wizard Select product check"
+msgstr "Wizard Chọn sản phẩm kiểm kê"
+
+#. module: intern_inventory
+#. odoo-python
+#: code:addons/intern_inventory/models/inventory_line.py:0
+#, python-format
+msgid "inventory.line"
+msgstr ""
+
+#. module: intern_inventory
+#: model:ir.model.fields,field_description:intern_inventory.field_inventory_line__location_usage
+msgid "localtion use"
+msgstr "sử dụng vị trí"
+
+#. module: intern_inventory
+#. odoo-python
+#: code:addons/intern_inventory/models/inventory_line.py:0
+#, python-format
+msgid "product_id"
+msgstr "Mã sản phẩm"
+
+#. module: intern_inventory
+#: model:ir.model,name:intern_inventory.model_project_wizard_import
+msgid "project.wizard.import"
+msgstr "project.wizard.import"
