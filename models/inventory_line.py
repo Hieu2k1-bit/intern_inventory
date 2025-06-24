@@ -65,7 +65,7 @@ class InventoryLine(models.Model):
             'type': 'ir.actions.client',
             'tag': 'display_notification',
             'params': {
-                'message': _("Dòng kiểm kê cho sản phẩm '%s' đã được xóa thành công." % product_name),
+                'message': _("Check product line '%s' has been deleted successfully." % product_name),
                 'type': 'success',
                 'sticky': False,
                 'next': {'type': 'ir.actions.act_window_close'},

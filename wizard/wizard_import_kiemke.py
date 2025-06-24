@@ -40,7 +40,7 @@ class ProjectWizardImport(models.TransientModel):
                 'type': 'ir.actions.client',
                 'tag': 'display_notification',
                 'params': {
-                    'title': _('Lỗi'),
+                    'title': _('Error'),
                     'message': result['message'],
                     'type': 'danger',
                     'sticky': True,

@@ -6,6 +6,7 @@
         <field name="model">stock.move.line</field>
         <field name="inherit_id" ref="stock.view_move_line_tree"/>
         <field name="arch" type="xml" >
+
             <xpath expr="//field[@name='qty_done']" position="attributes">
                 <attribute name="decoration-success">True</attribute>
                 <attribute name="decoration-warning">False</attribute>
@@ -32,6 +33,7 @@
         <field name="model">stock.move.line</field>
         <field name="inherit_id" ref="stock.view_move_line_form"/>
         <field name="arch" type="xml">
+
             <xpath expr="//sheet" position="inside">
             </xpath>
         </field>

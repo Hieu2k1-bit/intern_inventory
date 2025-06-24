@@ -65,9 +65,9 @@
                         </group>
                         <button name="action_open_product_selection" type="object" string="Add Products" class="btn-primary"/>
                         <notebook>
-                            <page string="Product Information">
+                            <page string="Product Information" >
                                 <field name="line_ids">
-                                    <tree editable="bottom">
+                                    <tree editable="bottom" delete="false">
                                         <field name="product_id"/>
                                         <field name="lot_id"/>
                                         <field name="unit_id"/>
